@@ -6,9 +6,9 @@
 
 filtbank *create_filtbank(int n_chan, filtpar *par)
 {
-    filtbank *bank = calloc(sizeof(*bank), 1);
+    filtbank *bank = (filtbank*)calloc(sizeof(*bank), 1);
     bank->n_chan = n_chan;
-    bank->w = calloc(n_chan*2, sizeof(*bank->w));
+    bank->w = (int64_t*)calloc(n_chan*2, sizeof(*bank->w));
     bank->par = par;
     return bank;
 }
@@ -58,7 +58,7 @@ void multi_filter_data(filtbank *banks, int n_bank, int32_t *input, int32_t *out
 
 filtpar *mce_filter()
 {
-    filtpar *pars = calloc(3, sizeof(*pars));
+    filtpar *pars = (filtpar*)calloc(3, sizeof(*pars));
     filtpar p1 = {{32092, 15750}, 14, 3, 3+2+0 };
     filtpar p2 = {{31238, 14895}, 14, 3, 3+2+7};
     pars[0] = p1;
@@ -66,4 +66,3 @@ filtpar *mce_filter()
 
     return pars;
 }
-

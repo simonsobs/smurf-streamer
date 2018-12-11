@@ -14,7 +14,7 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 import rogue.utilities
-import DataWriter
+import G3StreamWriter
 import pyrogue
 import time
 
@@ -30,16 +30,26 @@ base.add(FpgaTopLevel(
     pcieRssiLink = 0
     ))
 
-rx = DataWriter.DataWriter()
+rx = G3StreamWriter.G3StreamWriter("test.g3")
 pyrogue.streamConnect(base.FpgaTopLevel.stream.application(0xC1),rx)
 
-base.start(pollEn=True)
-try:
-    while (True):
-       print(" Rx: Count {}, Bytes {}, Last {}".format(rx.getCount(), rx.getBytes(), rx.getLast()))
-       time.sleep(1)
+base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(0)
 
-except KeyboardInterrupt:
-    # print ("Stopping rogue...")
+base.start(pollEn=True)
+
+try:
+    time.sleep(5)
     rx.endFile()
-    pass
+    # time.sleep(1)
+    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(100)
+    # time.sleep(1)
+    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(200)
+    # time.sleep(1)
+    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(300)
+    # time.sleep(1)
+    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(000)
+    # time.sleep(1)
+    # rx.endFile()
+except KeyboardInterrupt:
+    print("Stopping due to keyboard interrupt...")
+    rx.endFile()
