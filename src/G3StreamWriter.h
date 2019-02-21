@@ -9,7 +9,7 @@
 #include <G3Timestream.h>
 #include <G3TimeStamp.h>
 #include <string>
-
+#include <mutex>
 #include <random>
 
 #define NCHANS 4096
@@ -30,22 +30,34 @@ public:
     void endFile();
 
     // Writes cached samples to G3Frame
-    void writeG3Frame();
+    void writeG3Frame(G3Time start_time, G3Time stop_time);
 
     // Called whenever frame is passed from master
     void acceptFrame ( ris::FramePtr frame );
+
 
     // Keeps track of bytes transmitted
     uint32_t rxCount, rxBytes, rxLast, cur_sample;
     uint32_t last_seq_rx;
 
-    G3TimestreamPtr timestreams[NCHANS], timestreams_f[NCHANS];
+    G3TimestreamPtr timestreams[NCHANS];
+    G3TimestreamMapPtr ts_map;
 
-    G3TimestreamMapPtr ts_map, ts_map_f;
+    // Stores all detector phases as they come from rogue
+    int32_t *phases;
 
-    int32_t *phases, *phases_f;
+    // Copy of phases that is refreshed once all chans and samples have been read.
+    // Used in thread to write G3 output.
+    int32_t *phases_cpy;
+
+    // Stores phases after low_pass filtering
+    int32_t *phases_filtered;
 
     G3WriterPtr writer;
+    std::deque<G3FramePtr> junk;
+
+    // Lock that needs to be used whenever file is written to.
+    std::mutex write_mtx;
 
     // Keeps track of start and stop times for current frame
     G3Time start, stop;
@@ -54,9 +66,6 @@ public:
     filtbank *bank1, *bank2;
     filtbank banks[2];
     uint16_t downsample_factor;
-
-    std::deque<G3FramePtr> junk;
-
 
     uint32_t getCount() { return rxCount; } // Total frames
     uint32_t getBytes() { return rxBytes; } // Total Bytes

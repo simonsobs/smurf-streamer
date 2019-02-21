@@ -1,8 +1,9 @@
 *.core
 *.o
 *.g3
+
 build/
 python/
 .ipynb_checkpoints/
+*.ipynb
 *.swp
-

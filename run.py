@@ -17,39 +17,61 @@ import rogue.utilities
 import G3StreamWriter
 import pyrogue
 import time
+import argparse
 
 from FpgaTopLevel import *
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "--commType",
+    type     = str,
+    required = False,
+    default  = 'eth-rssi-interleaved',
+    help     = "Sets the communication type",
+)
+
+parser.add_argument(
+    "--ipAddr",
+    type     = str,
+    required = False,
+    default  = '192.168.2.20',
+    help     = "IP address",
+)
+
+parser.add_argument(
+    "--out",
+    type     = str,
+    required = False,
+    default  = 'test.g3',
+    help     = "File where data is written",
+)
+
+args = parser.parse_args()
 
 base = pyrogue.Root(name='AMCc', description='')
 
 base.add(FpgaTopLevel(
     simGui = False,
-    commType = "eth-rssi-interleaved",
-    ipAddr = "192.168.2.20",
+    commType = args.commType,
+    ipAddr = args.ipAddr,
     pcieRssiLink = 0
     ))
 
-rx = G3StreamWriter.G3StreamWriter("test.g3")
+
+rx = G3StreamWriter.G3StreamWriter(args.out)
 pyrogue.streamConnect(base.FpgaTopLevel.stream.application(0xC1),rx)
 
 base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(0)
 
 base.start(pollEn=True)
-
+print("Connected Smurf")
 try:
-    time.sleep(5)
+    time.sleep(10)
     rx.endFile()
-    # time.sleep(1)
-    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(100)
-    # time.sleep(1)
-    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(200)
-    # time.sleep(1)
-    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(300)
-    # time.sleep(1)
-    # base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(000)
-    # time.sleep(1)
-    # rx.endFile()
+    base.stop()
 except KeyboardInterrupt:
+
     print("Stopping due to keyboard interrupt...")
     rx.endFile()
+    base.stop()
