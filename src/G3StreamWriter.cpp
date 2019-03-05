@@ -12,6 +12,7 @@
 #include <G3Timestream.h>
 #include <G3TimeStamp.h>
 #include <G3Units.h>
+#include <G3NetworkSender.h>
 
 #include <string>
 #include <math.h>
@@ -40,10 +41,10 @@ G3Time toG3Time(uint32_t sec, uint32_t ns){
 }
 
 
-G3StreamWriter::G3StreamWriter(std::string filename) :
+G3StreamWriter::G3StreamWriter(std::string filename, int port) :
         rxCount(0), rxBytes(0), rxLast(0), cur_sample(0),
         ts_map(new G3TimestreamMap),
-        writer( new G3Writer(filename)),
+        writer(new G3NetworkSender("*", port, 10)),
         downsample_factor(1)
 {
     phases = (int32_t *)calloc(NSAMPLES * NCHANS, sizeof(*phases));
@@ -62,17 +63,18 @@ G3StreamWriter::G3StreamWriter(std::string filename) :
     }
 }
 
-void G3StreamWriter::endFile(){
-    G3FramePtr f = G3FramePtr(new G3Frame);
-    f->type = G3Frame::EndProcessing;
-
-    write_mtx.lock();
-    printf("Ending file...\n");
-    writer->Process(f, junk);
-    write_mtx.unlock();
-}
+// void G3StreamWriter::endFile(){
+//     G3FramePtr f = G3FramePtr(new G3Frame);
+//     f->type = G3Frame::EndProcessing;
+//
+//     write_mtx.lock();
+//     printf("Ending file...\n");
+//     writer->Process(f, junk);
+//     write_mtx.unlock();
+// }
 
 void G3StreamWriter::writeG3Frame(G3Time start_time, G3Time stop_time){
+
     /* Filter array */
     multi_filter_data(banks, 2, phases_cpy, phases_filtered, NSAMPLES);
 
@@ -89,13 +91,12 @@ void G3StreamWriter::writeG3Frame(G3Time start_time, G3Time stop_time){
     /* Writes G3TimestreamMap to frame */
     G3FramePtr f = G3FramePtr(new G3Frame);
     f->Put("phases", ts_map);
-
     write_mtx.lock();
     printf("Writing G3Frame (%d samples @ %.0f Hz)...\n",
                 NSAMPLES, timestreams[0]->GetSampleRate() * G3Units::s);
-
     writer->Process(f, junk);
     write_mtx.unlock();
+    return;
 }
 
 void G3StreamWriter::acceptFrame ( ris::FramePtr frame ) {
@@ -121,6 +122,8 @@ void G3StreamWriter::acceptFrame ( ris::FramePtr frame ) {
     memset(buff, 0, nbytes);
     uint64_t  *dst = buff;
 
+
+
     while (iter != end){
        auto size = iter.remBuffer ();
        auto *src = iter.ptr();
@@ -140,7 +143,6 @@ void G3StreamWriter::acceptFrame ( ris::FramePtr frame ) {
         printf("Missed %u Frame(s)! last: %u, cur: %u\n", seq - last_seq_rx, last_seq_rx, seq);
     }
     last_seq_rx = seq;
-
     // printf("sec: %d\tns: %d\n", sec, ns);
 
     /* Reads Phases */
@@ -154,6 +156,7 @@ void G3StreamWriter::acceptFrame ( ris::FramePtr frame ) {
         phases[i * NSAMPLES + cur_sample] = (int32_t)(phase_int);
     }
 
+
     cur_sample++;
     if (cur_sample == NSAMPLES){
 
@@ -165,6 +168,7 @@ void G3StreamWriter::acceptFrame ( ris::FramePtr frame ) {
         writer_thread.detach();
         cur_sample = 0;
     }
+    free(buff);
     return;
 }
 

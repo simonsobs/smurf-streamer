@@ -24,7 +24,7 @@ namespace bp = boost::python;
 class G3StreamWriter: public ris::Slave{
 public:
 
-    G3StreamWriter(std::string  filename);
+    G3StreamWriter(std::string  filename, int port);
 
     // Ends G3File with a EndProcessing Frame
     void endFile();
@@ -43,6 +43,8 @@ public:
     G3TimestreamPtr timestreams[NCHANS];
     G3TimestreamMapPtr ts_map;
 
+    uint64_t *buff;
+
     // Stores all detector phases as they come from rogue
     int32_t *phases;
 
@@ -53,7 +55,7 @@ public:
     // Stores phases after low_pass filtering
     int32_t *phases_filtered;
 
-    G3WriterPtr writer;
+    G3NetworkSenderPtr writer;
     std::deque<G3FramePtr> junk;
 
     // Lock that needs to be used whenever file is written to.
@@ -75,11 +77,11 @@ public:
     static void setup_python() {
         bp::class_<G3StreamWriter, boost::shared_ptr<G3StreamWriter>,
                     bp::bases<ris::Slave>, boost::noncopyable >("G3StreamWriter",
-                    bp::init<std::string>())
+                    bp::init<std::string, int>())
         .def("getCount", &G3StreamWriter::getCount)
         .def("getBytes", &G3StreamWriter::getBytes)
         .def("getLast",  &G3StreamWriter::getLast)
-        .def("endFile",  &G3StreamWriter::endFile)
+        // .def("endFile",  &G3StreamWriter::endFile)
         ;
         bp::implicitly_convertible<boost::shared_ptr<G3StreamWriter>, ris::SlavePtr>();
     };

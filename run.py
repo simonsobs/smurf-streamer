@@ -47,6 +47,14 @@ parser.add_argument(
     help     = "File where data is written",
 )
 
+parser.add_argument(
+    "--port",
+    type = int,
+    required = False,
+    default = 4536,
+    help = "Port to write G3Frames",
+)
+
 args = parser.parse_args()
 
 base = pyrogue.Root(name='AMCc', description='')
@@ -59,19 +67,22 @@ base.add(FpgaTopLevel(
     ))
 
 
-rx = G3StreamWriter.G3StreamWriter(args.out)
+rx = G3StreamWriter.G3StreamWriter(args.out, args.port)
 pyrogue.streamConnect(base.FpgaTopLevel.stream.application(0xC1),rx)
 
 base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(0)
 
 base.start(pollEn=True)
 print("Connected Smurf")
+print("Writing G3Frames to port: *:{}".format(args.port))
 try:
-    time.sleep(10)
-    rx.endFile()
+    while True:
+        pass
+    # time.sleep(10)
+    # rx.endFile()
     base.stop()
 except KeyboardInterrupt:
 
     print("Stopping due to keyboard interrupt...")
-    rx.endFile()
+    # rx.endFile()
     base.stop()
