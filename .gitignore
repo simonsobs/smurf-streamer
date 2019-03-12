@@ -1,7 +1,9 @@
 *.core
-*.o
-*.g3
 
+a*.o
+*.g3
+__pycache__/
+data/
 build/
 python/
 .ipynb_checkpoints/
