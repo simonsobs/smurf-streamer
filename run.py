@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 #-----------------------------------------------------------------------------
-# Title      : Test file for MyModule
+# Title      : G3StreamWriter
 #-----------------------------------------------------------------------------
-# File       : exoTest.py
-# Created    : 2018-02-28
+# File       : run.py
 #-----------------------------------------------------------------------------
-# This file is part of the rogue_example software. It is subject to
-# the license terms in the LICENSE.txt file found in the top-level directory
-# of this distribution and at:
-#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
-# No part of the rogue_example software, including this file, may be
-# copied, modified, propagated, or distributed except according to the terms
-# contained in the LICENSE.txt file.
+#
+# This file is to test the G3StreamWriter. It starts communication with the smurf
+# over rogue, and streams downsampled data with the G3NetworkSend. This file also
+# runs a StreamListener, which reads data from the network and writes it to G3Files
+# in a specified location.
+#
 #-----------------------------------------------------------------------------
 import rogue.utilities
 import G3StreamWriter
@@ -37,14 +35,6 @@ parser.add_argument(
     required = False,
     default  = '192.168.2.20',
     help     = "IP address",
-)
-
-parser.add_argument(
-    "--out",
-    type     = str,
-    required = False,
-    default  = 'test.g3',
-    help     = "File where data is written",
 )
 
 parser.add_argument(
