@@ -13,21 +13,13 @@
 #include <random>
 
 #define NCHANS 4096
-#define NSAMPLES 1000
-
 
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
-
-
-
 class G3StreamWriter: public ris::Slave{
 public:
 
-    G3StreamWriter(std::string  filename, int port);
-
-    // Ends G3File with a EndProcessing Frame
-    void endFile();
+    G3StreamWriter(int port, int num_samples, int max_queue_size);
 
     // Writes cached samples to G3Frame
     void writeG3Frame(G3Time start_time, G3Time stop_time);
@@ -37,9 +29,14 @@ public:
 
 
     // Keeps track of bytes transmitted
-    uint32_t rxCount, rxBytes, rxLast, cur_sample;
+    // Number of samples per G3Frame
+    const int nsamples;
+    uint32_t cur_sample;
     uint32_t last_seq_rx;
 
+    G3IntPtr frame_num;
+    G3IntPtr session_id;
+    G3VectorStringPtr chan_keys;
     G3TimestreamPtr timestreams[NCHANS];
     G3TimestreamMapPtr ts_map;
 
@@ -56,35 +53,11 @@ public:
     int32_t *phases_filtered;
 
     G3NetworkSenderPtr writer;
-    std::deque<G3FramePtr> junk;
 
     // Lock that needs to be used whenever file is written to.
     std::mutex write_mtx;
 
     // Keeps track of start and stop times for current frame
     G3Time start, stop;
-
-    // Filter banks for low pass filter
-    filtbank *bank1, *bank2;
-    filtbank banks[2];
-    uint16_t downsample_factor;
-
-    uint32_t getCount() { return rxCount; } // Total frames
-    uint32_t getBytes() { return rxBytes; } // Total Bytes
-    uint32_t getLast()  { return rxLast;  } // Last frame size
-
-    // Expose methods to python
-    static void setup_python() {
-        bp::class_<G3StreamWriter, boost::shared_ptr<G3StreamWriter>,
-                    bp::bases<ris::Slave>, boost::noncopyable >("G3StreamWriter",
-                    bp::init<std::string, int>())
-        .def("getCount", &G3StreamWriter::getCount)
-        .def("getBytes", &G3StreamWriter::getBytes)
-        .def("getLast",  &G3StreamWriter::getLast)
-        // .def("endFile",  &G3StreamWriter::endFile)
-        ;
-        bp::implicitly_convertible<boost::shared_ptr<G3StreamWriter>, ris::SlavePtr>();
-    };
 };
-
 #endif

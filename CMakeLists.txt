@@ -66,7 +66,7 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_directories(${SPT3G_DIR}/core/include/core)
 include_directories(${SPT3G_DIR}/core/include)
-
+include_directories(${SPT3G_DIR}/core/src)
 # Create rogue python library
 add_library(G3StreamWriter SHARED src/G3StreamWriter.cpp)
 
