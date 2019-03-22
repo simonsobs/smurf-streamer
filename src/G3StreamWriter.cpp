@@ -22,8 +22,11 @@
 #include "lo_pass.h"
 #include "G3StreamWriter.h"
 
+
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
+
+
 
 // Downsampling factor. We'll be receiving already filtered and downsampled data
 // So this is just to make sure file sizes are right.
@@ -47,13 +50,18 @@ G3StreamWriter::G3StreamWriter(int port, int num_samples, int max_queue_size):
         ts_map(new G3TimestreamMap),
         chan_keys(new G3VectorString(NCHANS)),
         writer(new G3NetworkSender("*", port, max_queue_size)),
-        frame_num(new G3Int(0)),
-        session_id(new G3Int(0))
+        frame_num(new G3Int(0))
 {
+    G3TimePtr session_start_time = G3TimePtr(new G3Time(G3Time::Now()));
+    session_id = G3IntPtr(new G3Int(std::hash<G3Time*>()(session_start_time.get())));
 
-    std::hash<time_t> hash;
-    session_id->value = hash(time(NULL));
-
+    // Writes Session frame
+    G3FramePtr f = G3FramePtr(new G3Frame(G3Frame::Observation));
+    std::deque<G3FramePtr> junk;
+    f->Put("session_id", session_id);
+    f->Put("session_start_time", session_start_time);
+    writer->Process(f, junk);
+    //
     phases = (int32_t *)calloc(nsamples * NCHANS, sizeof(*phases));
     phases_cpy = (int32_t *)calloc(nsamples * NCHANS, sizeof(*phases));
 
@@ -65,6 +73,13 @@ G3StreamWriter::G3StreamWriter(int port, int num_samples, int max_queue_size):
 }
 
 void G3StreamWriter::writeG3Frame(G3Time start_time, G3Time stop_time){
+
+        // Resizes timestreams if need be
+    if (nsamples/DSFactor  != timestreams[0]->size()){
+        for (int i = 0; i < NCHANS; i++){
+            timestreams[i]->resize(nsamples/DSFactor);
+        }
+    }
 
     /* Write to G3TimestreamMap */
     for (int i = 0; i < NCHANS; i++){
@@ -139,7 +154,6 @@ void G3StreamWriter::acceptFrame ( ris::FramePtr frame ) {
         phases[i * nsamples + cur_sample] = (int32_t)(phase_int);
     }
     cur_sample++;
-
     if (cur_sample == nsamples){
         stop = G3Time::Now();
         memcpy(phases_cpy, phases, NCHANS * nsamples * sizeof(*phases));
@@ -172,6 +186,7 @@ BOOST_PYTHON_MODULE(G3StreamWriter) {
                 bp::arg("max_queue_size")=100
             )
         ))
+        // .def("flush", &G3StreamWriter::flush)
         // .def("endFile",  &G3StreamWriter::endFile)
         ;
         bp::implicitly_convertible<boost::shared_ptr<G3StreamWriter>, ris::SlavePtr>();

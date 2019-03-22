@@ -71,7 +71,9 @@ listener = StreamListener(port=args.port, data_dir="data/", time_per_file=60*60)
 print("Connected Smurf")
 print("Writing G3Frames to port: *:{}".format(args.port))
 try:
-    listener.run()
+    while True:
+        time.sleep(1)
+    #listener.run()
 except KeyboardInterrupt:
     print("Stopping due to keyboard interrupt...")
     listener.end_file()

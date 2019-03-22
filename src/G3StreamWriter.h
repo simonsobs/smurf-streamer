@@ -23,6 +23,8 @@ public:
 
     // Writes cached samples to G3Frame
     void writeG3Frame(G3Time start_time, G3Time stop_time);
+    // Writes remaining unsaved data to G3Frame
+    // void flush();
 
     // Called whenever frame is passed from master
     void acceptFrame ( ris::FramePtr frame );
@@ -40,7 +42,7 @@ public:
     G3TimestreamPtr timestreams[NCHANS];
     G3TimestreamMapPtr ts_map;
 
-    uint64_t *buff;
+
 
     // Stores all detector phases as they come from rogue
     int32_t *phases;
