@@ -68,13 +68,15 @@ include_directories(${SPT3G_DIR}/core/include/core)
 include_directories(${SPT3G_DIR}/core/include)
 include_directories(${SPT3G_DIR}/core/src)
 # Create rogue python library
-add_library(G3StreamWriter SHARED src/G3StreamWriter.cpp)
+
+add_library(G3StreamWriter SHARED src/G3StreamWriter.cpp src/SampleData.cpp)
 
 # Set output to TOP/lib, remove lib prefix
 set_target_properties(G3StreamWriter PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/python)
 set_target_properties(G3StreamWriter PROPERTIES PREFIX "")
 
 # Link to rogue core
-TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${PROJECT_SOURCE_DIR}/src/lo_pass.c)
 TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${ROGUE_LIBRARIES})
+
+TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${PROJECT_SOURCE_DIR}/src/lo_pass.c)
 TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${SPT3G_DIR}/build/spt3g/core.so)
