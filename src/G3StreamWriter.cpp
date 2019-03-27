@@ -81,6 +81,9 @@ void G3StreamWriter::run(){
 
         // Swaps buffers so that we can continue accepting new frames.
         int nsamples = sample_buffer.swap();
+        if (nsamples == 0)
+            continue;
+            
         // Reads sample data into TimestreamMap
         for (int i = 0; i < NCHANS; i++)
             timestreams[i]->resize(nsamples/DSFactor);
@@ -111,6 +114,7 @@ void G3StreamWriter::run(){
 
         printf("Writing %lu samples @ %.2f Hz\n", ts_map->NSamples(), ts_map->GetSampleRate() / G3Units::Hz);
         writer->Process(f, junk);
+        frame_num->value+=1;
     }
 
     printf("Stopped stream.\n");
