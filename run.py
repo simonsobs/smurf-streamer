@@ -18,6 +18,8 @@ import time
 import argparse
 from StreamListener import StreamListener
 from FpgaTopLevel import *
+import threading
+
 
 parser = argparse.ArgumentParser()
 
@@ -57,15 +59,18 @@ base.add(FpgaTopLevel(
     ))
 
 
-rx = G3StreamWriter.G3StreamWriter(num_samples=1000, max_queue_size=10)
+rx = G3StreamWriter.G3StreamWriter(frame_time=1., sample_buff_size=10000)
 pyrogue.streamConnect(base.FpgaTopLevel.stream.application(0xC1),rx)
 
 base.FpgaTopLevel.AppTop.AppCore.StreamReg.StreamData[0].set(0)
 
 base.start(pollEn=True)
 
-# Listener to read from Stream and write to file. This doesn't have to be run in the
-# same function as rogue.
+t = threading.Thread(target=rx.run)
+t.start()
+
+
+
 listener = StreamListener(port=args.port, data_dir="data/", time_per_file=60*60)
 
 print("Connected Smurf")
@@ -75,6 +80,5 @@ try:
         time.sleep(1)
     #listener.run()
 except KeyboardInterrupt:
-    print("Stopping due to keyboard interrupt...")
-    listener.end_file()
+    rx.stop()
     base.stop()
