@@ -85,18 +85,20 @@ void G3StreamWriter::run(){
         for (int i = 0; i < NCHANS; i++)
             timestreams[i]->resize(nsamples/DSFactor);
 
-
         SampleDataPtr x;
-        for (int i = 0; i < nsamples; i += DSFactor){
-            x = sample_buffer.read_buffer[i];
+        int i;
+
+        for (i = 0; i < nsamples/DSFactor; i ++){
+            x = sample_buffer.read_buffer[i*DSFactor];
+
             for (int j = 0; j < NCHANS; j++){
                 if (i == 0)
                     timestreams[j]->start = x->timestamp;
 
-                (*timestreams[j])[i/DSFactor] = toPhase(x->data[j]);
+                (*timestreams[j])[i] = toPhase(x->data[j]);
+
             }
         }
-
         for (int i = 0; i < NCHANS; i++)
             timestreams[i]->stop = x->timestamp;
 
@@ -111,9 +113,6 @@ void G3StreamWriter::run(){
         writer->Process(f, junk);
     }
 
-    // std::deque<G3FramePtr> junk;
-    // G3FramePtr f(new G3Frame(G3Frame::EndProcessing));
-    // writer->Process(f, junk);
     printf("Stopped stream.\n");
 }
 
