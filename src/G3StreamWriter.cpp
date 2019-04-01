@@ -81,17 +81,15 @@ void G3StreamWriter::run(){
 
         // Swaps buffers so that we can continue accepting new frames.
         int nsamples = sample_buffer.swap();
-        if (nsamples == 0)
+        if (nsamples < DSFactor)
             continue;
-            
+
         // Reads sample data into TimestreamMap
         for (int i = 0; i < NCHANS; i++)
             timestreams[i]->resize(nsamples/DSFactor);
 
         SampleDataPtr x;
-        int i;
-
-        for (i = 0; i < nsamples/DSFactor; i ++){
+        for (int i = 0; i < nsamples/DSFactor; i ++){
             x = sample_buffer.read_buffer[i*DSFactor];
 
             for (int j = 0; j < NCHANS; j++){
