@@ -50,7 +50,7 @@ G3StreamWriter::G3StreamWriter(int port, float frame_time, int max_queue_size):
         SmurfProcessor(),
         frame_time(frame_time),
         ts_map(new G3TimestreamMap),
-        chan_keys(new G3VectorString(NCHANS)),
+        chan_keys(new G3VectorString(smurfsamples)),
         writer(new G3NetworkSender("*", port, max_queue_size)),
         sample_buffer(),
         frame_num(new G3Int(0)), running(true)
@@ -65,7 +65,7 @@ G3StreamWriter::G3StreamWriter(int port, float frame_time, int max_queue_size):
     f->Put("session_start_time", session_start_time);
     writer->Process(f, junk);
 
-    for (int i = 0; i < NCHANS; i++){
+    for (int i = 0; i < smurfsamples; i++){
         timestreams[i] = G3TimestreamPtr(new G3Timestream());
         (*chan_keys)[i] = std::to_string(i);
         ts_map->insert(std::make_pair((*chan_keys)[i], timestreams[i]));
@@ -89,7 +89,7 @@ void G3StreamWriter::run(){
             continue;
 
         // Reads sample data into TimestreamMap
-        for (int i = 0; i < NCHANS; i++)
+        for (int i = 0; i < smurfsamples; i++)
             timestreams[i]->resize(nsamples);
 
         SampleDataPtr x;
@@ -103,7 +103,7 @@ void G3StreamWriter::run(){
                 // (*timestreams[j])[i] = toPhase(x->data[j]);
             }
         }
-        for (int i = 0; i < NCHANS; i++)
+        for (int i = 0; i < smurfsamples; i++)
             timestreams[i]->stop = x->timestamp;
 
         G3FramePtr f(new G3Frame(G3Frame::Scan));

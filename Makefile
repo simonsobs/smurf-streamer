@@ -7,6 +7,7 @@ DOCKER_RUN_FLAGS += --name $(NAME) --net host  -e DISPLAY=${DISPLAY}
 DOCKER_RUN_FLAGS += -v /home/${user}:/home/${user} -v /data:/data -v ${PWD}/fw:/tmp/fw/
 DOCKER_RUN_FLAGS += -v ${PWD}/scripts/:/usr/local/src/G3StreamWriter/scripts/
 DOCKER_RUN_FLAGS += -v ${PWD}/smurf.cfg:/usr/local/src/G3StreamWriter/smurf.cfg
+DOCKER_RUN_FLAGS += -v ${PWD}/mask.txt:/usr/local/src/G3StreamWriter/mask.txt
 
 START_SCRIPT = /usr/local/src/G3StreamWriter/scripts/control-server/start_server.sh
 SMURF_FLAGS = -D -a 192.168.2.20 -e smurf_server -c eth-rssi-interleaved -d /tmp/fw/config/defaults.yml -f Int16 -b 524288

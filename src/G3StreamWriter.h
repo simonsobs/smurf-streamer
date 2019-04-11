@@ -15,8 +15,6 @@
 
 #include "SampleData.h"
 
-#define NCHANS 4096
-
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
@@ -34,21 +32,15 @@ public:
     void stop();
     bool running;
 
-
-
     SampleBuffer sample_buffer;
 
     float frame_time;
     int count;
 
-    // Keeps track of bytes transmitted
-    // Number of samples per G3Frame
-    uint32_t last_seq_rx;
-
     G3IntPtr frame_num;
     G3IntPtr session_id;
     G3VectorStringPtr chan_keys;
-    G3TimestreamPtr timestreams[NCHANS];
+    G3TimestreamPtr timestreams[smurfsamples];
     G3TimestreamMapPtr ts_map;
 
     G3NetworkSenderPtr writer;

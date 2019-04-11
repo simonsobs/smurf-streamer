@@ -9,7 +9,6 @@
 
 #define MAX_BUFF_SIZE 100000
 
-
 namespace ris = rogue::interfaces::stream;
 
 int SampleBuffer::swap(){
@@ -45,10 +44,6 @@ SampleData::SampleData(smurf_tx_data_t* buffer):
     data(smurfsamples)
 {
     header->copy_header(buffer);
-
-    for (int i = smurfheaderlength; i < smurfheaderlength + 12; i++){
-        printf(" - byte[%03d] = 0x%02x\n", i, header->header[i]);
-    }
 
     // Copies data from buffer
     uint offset;
