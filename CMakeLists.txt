@@ -39,13 +39,13 @@ link_directories(${SPT3G_DIR}/build/spt3g)
 #####################################
 # Find Rogue & Support Libraries
 #####################################
-if (DEFINED ENV{ROGUE_DIR})
-   set(Rogue_DIR $ENV{ROGUE_DIR}/lib)
-else()
-   set(Rogue_DIR ${CMAKE_PREFIX_PATH}/lib)
-endif()
-find_package(Rogue)
+set(Rogue_DIR $ENV{ROGUE_DIR}/lib)
+find_package(Rogue REQUIRED)
 
+set(Smurf_DIR $ENV{SMURF_DIR}/lib)
+find_package(Smurf REQUIRED)
+
+set(Boost_USE_MULTITHREADED ON)
 find_package(Boost COMPONENTS thread)
 
 #####################################
@@ -53,30 +53,34 @@ find_package(Boost COMPONENTS thread)
 #####################################
 set(DO_PYTHON 0)
 
-find_package(PythonInterp 3.6)
-find_package(PythonLibs 3.6)
+find_package(PythonInterp 3.6 REQUIRED)
+find_package(PythonLibs 3.6 REQUIRED)
 
 #####################################
 # Setup build
 #####################################
+include_directories(/usr/local/include/)
 
 # Include files
 include_directories(${ROGUE_INCLUDE_DIRS})
+include_directories(${SMURF_INCLUDE_DIRS})
+
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_directories(${SPT3G_DIR}/core/include/core)
 include_directories(${SPT3G_DIR}/core/include)
 include_directories(${SPT3G_DIR}/core/src)
+include_directories(${PROJECT_SOURCE_DIR}/include/)
+
 # Create rogue python library
 
-add_library(G3StreamWriter SHARED src/G3StreamWriter.cpp src/SampleData.cpp)
+AUX_SOURCE_DIRECTORY(src SRC_FILES)
+add_library(G3StreamWriter SHARED ${SRC_FILES})
 
 # Set output to TOP/lib, remove lib prefix
 set_target_properties(G3StreamWriter PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/python)
 set_target_properties(G3StreamWriter PROPERTIES PREFIX "")
 
 # Link to rogue core
-TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${ROGUE_LIBRARIES})
-
-TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${PROJECT_SOURCE_DIR}/src/lo_pass.c)
+TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${ROGUE_LIBRARIES} ${SMURF_LIBRARIES})
 TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${SPT3G_DIR}/build/spt3g/core.so)

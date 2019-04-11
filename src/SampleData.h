@@ -8,19 +8,19 @@
 #include <rogue/interfaces/stream/Frame.h>
 #include <rogue/interfaces/stream/FrameIterator.h>
 
+#include <smurf_processor.h>
+
 #include <G3TimeStamp.h>
 #include <mutex>
 
 namespace ris = rogue::interfaces::stream;
 
-
-
 class SampleData{
 public:
-    uint32_t seq;
+    boost::shared_ptr<SmurfHeader> header;
+    std::vector<avgdata_t> data;
     G3Time timestamp;
-    std::vector<int16_t> data;
-    SampleData(ris::FramePtr frame);
+    SampleData(smurf_tx_data_t* data);
 };
 typedef boost::shared_ptr<SampleData> SampleDataPtr;
 
@@ -30,13 +30,11 @@ private:
     int write_count;
     std::mutex mutex;
 public:
-    int buff_max;
     int read_count;
     std::vector<SampleDataPtr> read_buffer;
 
-    SampleBuffer(int buff_max=1000):
-        buff_max(buff_max),
-        read_buffer(buff_max), write_buffer(buff_max),
+    SampleBuffer(int size=1024):
+        read_buffer(size), write_buffer(size),
         read_count(0), write_count(0){}
 
 

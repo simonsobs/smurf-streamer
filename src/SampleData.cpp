@@ -2,11 +2,15 @@
 #include <rogue/interfaces/stream/Frame.h>
 #include <rogue/interfaces/stream/FrameIterator.h>
 #include <G3TimeStamp.h>
+#include <G3Units.h>
+#include <smurf_processor.h>
 
 #include "SampleData.h"
 
-namespace ris = rogue::interfaces::stream;
+#define MAX_BUFF_SIZE 100000
 
+
+namespace ris = rogue::interfaces::stream;
 
 int SampleBuffer::swap(){
     mutex.lock();
@@ -18,52 +22,47 @@ int SampleBuffer::swap(){
 }
 
 void SampleBuffer::write(SampleDataPtr sample){
-    if (write_count >= buff_max){
-        printf("Buffer full......\n");
-        return;
+    int cur_size = write_buffer.size();
+
+    if (write_count >= cur_size){
+        if (cur_size > MAX_BUFF_SIZE){
+            printf("Buffer full and @ max size. Dropping Frame.\n");
+            return;
+        }
+
+        printf("Buffer full.... Doubling size to %d samples\n", 2*cur_size);
+        write_buffer.resize(2*cur_size);
+        read_buffer.resize(2*cur_size);
     }
+
     mutex.lock();
     write_buffer[write_count++] = sample;
     mutex.unlock();
 }
 
-SampleData::SampleData(ris::FramePtr frame){
-    uint32_t nbytes = frame->getPayload();
+SampleData::SampleData(smurf_tx_data_t* buffer):
+    header(new SmurfHeader()),
+    data(smurfsamples)
+{
+    header->copy_header(buffer);
 
-    // Iterators to start and end of frame
-    ris::Frame::iterator iter = frame->beginRead();
-    ris::Frame::iterator  end = frame->endRead();
-
-    // Copies frame data to buffer
-    uint64_t *buff = (uint64_t *)malloc (nbytes);
-    memset(buff, 0, nbytes);
-    uint64_t  *dst = buff;
-
-    while (iter != end){
-       auto size = iter.remBuffer ();
-       auto *src = iter.ptr();
-       memcpy(dst, src, size);
-       dst += size/sizeof(dst[0]);
-       iter += size;
+    for (int i = smurfheaderlength; i < smurfheaderlength + 12; i++){
+        printf(" - byte[%03d] = 0x%02x\n", i, header->header[i]);
     }
 
-    /* Reads header */
-    uint8_t header_len = 16;
-    uint32_t num_channels = buff[0] >> (32);
-    seq = buff[10] >> (32);
-    uint32_t sec = buff[9] >> 32;
-    uint32_t ns =  buff[9] & 0xFFFFFFFF;
+    // Copies data from buffer
+    uint offset;
+    for (uint i = 0; i < smurfsamples; i++){
+        offset = i * sizeof(avgdata_t) + smurfheaderlength;
+        data[i] = pull_bit_field(header->header, offset, sizeof(avgdata_t));
+    }
 
-    if (sec == 0){
+    // Sets G3TimeStamp
+    // Is this the right timestamp to use?
+    uint64_t t = pull_bit_field(header->header, 48, 8);;
+    if (t == 0){
         timestamp = G3Time::Now();
+    } else{
+        timestamp = G3Time(t * G3Units::ns);
     }
-
-    data = std::vector<int16_t>(num_channels);
-    uint8_t offset;
-    for (uint32_t i = 0; i < num_channels; i++){
-        offset = i & 3;
-        data[i] = buff[header_len + i/4] >> (16 * offset) & 0xffff;
-    }
-
-    free(buff);
 }

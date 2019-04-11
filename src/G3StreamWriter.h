@@ -11,6 +11,7 @@
 #include <string>
 #include <mutex>
 #include <random>
+#include <smurf_processor.h>
 
 #include "SampleData.h"
 
@@ -19,22 +20,26 @@
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
-class G3StreamWriter: public ris::Slave{
+class G3StreamWriter: public SmurfProcessor{
 public:
 
-    G3StreamWriter(int port, float frame_time, int max_queue_size, int sample_buff_size);
+    G3StreamWriter(int port, float frame_time, int max_queue_size);
 
     // Called whenever frame is passed from master
-    void acceptFrame ( ris::FramePtr frame );
+    // void acceptFrame ( ris::FramePtr frame );
+    void transmit(smurf_tx_data_t* data);
 
     // Streams data over G3Network
     void run();
     void stop();
     bool running;
 
+
+
     SampleBuffer sample_buffer;
 
     float frame_time;
+    int count;
 
     // Keeps track of bytes transmitted
     // Number of samples per G3Frame
