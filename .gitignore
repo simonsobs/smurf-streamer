@@ -5,7 +5,8 @@ a*.o
 __pycache__/
 data/
 build/
-python/
+python/*.so
+fw/pyrogue
 .ipynb_checkpoints/
 *.ipynb
 *.swp

@@ -53,6 +53,7 @@ G3StreamWriter::G3StreamWriter(int port, float frame_time, int max_queue_size):
         chan_keys(new G3VectorString(smurfsamples)),
         writer(new G3NetworkSender("*", port, max_queue_size)),
         sample_buffer(),
+        run_thread(&G3StreamWriter::run, this),
         frame_num(new G3Int(0)), running(true)
 {
     G3TimePtr session_start_time = G3TimePtr(new G3Time(G3Time::Now()));
@@ -78,6 +79,7 @@ G3StreamWriter::G3StreamWriter(int port, float frame_time, int max_queue_size):
 void G3StreamWriter::run(){
     rogue::GilRelease noGil;
 
+    printf("Starting run thread for G3Streamer\n");
     running = true;
     while (running){
         usleep(frame_time * 1000000);
@@ -117,13 +119,14 @@ void G3StreamWriter::run(){
         writer->Process(f, junk);
         frame_num->value+=1;
     }
-
-    printf("Stopped stream.\n");
 }
 
 void G3StreamWriter::stop(){
-    printf("Stopping stream....\n");
+    printf("Stopping stream...\n");
     running = false;
+    run_thread.join();
+    printf("Stopped Stream.\n");
+
 }
 
 

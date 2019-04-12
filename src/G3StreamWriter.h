@@ -12,7 +12,7 @@
 #include <mutex>
 #include <random>
 #include <smurf_processor.h>
-
+#include <thread>
 #include "SampleData.h"
 
 namespace ris = rogue::interfaces::stream;
@@ -33,6 +33,8 @@ public:
     bool running;
 
     SampleBuffer sample_buffer;
+
+    std::thread run_thread;
 
     float frame_time;
     int count;
