@@ -25,6 +25,9 @@ public:
 typedef boost::shared_ptr<SampleData> SampleDataPtr;
 
 class SampleBuffer{
+/*
+    Double buffer containing frame data.
+*/
 private:
     std::vector<SampleDataPtr> write_buffer;
     int write_count;
@@ -37,10 +40,8 @@ public:
         read_buffer(size), write_buffer(size),
         read_count(0), write_count(0){}
 
-
     int swap();
     void write(SampleDataPtr sample);
-
 };
 
 #endif

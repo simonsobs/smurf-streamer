@@ -9,7 +9,7 @@ packages it into G3Frames and sends it over the network using the G3NetworkSende
 The smurf packet format is documented here:
 [Smurf Packet Format](https://github.com/slaclab/smurf-processor/blob/master/README.SmurfPacket.md)
 
-`make build` and `make run` will build and run the docker.
+`make build` and `make run` will build and run the docker. 
 Currently you need to change the smurf ip address `Makefile`.
 You can also set the seconds per G3Frame, output port, and max stream queue length in the Makefile.
 Soon this will be put into a config file somewhere.

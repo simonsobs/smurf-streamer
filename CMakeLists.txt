@@ -73,7 +73,6 @@ include_directories(${SPT3G_DIR}/core/src)
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 
 # Create rogue python library
-
 AUX_SOURCE_DIRECTORY(src SRC_FILES)
 add_library(G3StreamWriter SHARED ${SRC_FILES})
 

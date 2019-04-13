@@ -3,6 +3,8 @@
 #include <rogue/interfaces/stream/FrameIterator.h>
 #include <rogue/GilRelease.h>
 
+#include <smurf_processor.h>
+
 #include <boost/python.hpp>
 #include <boost/python/module.hpp>
 
@@ -14,13 +16,10 @@
 #include <G3TimeStamp.h>
 #include <G3Units.h>
 #include <G3NetworkSender.h>
-#include <fstream>
+
 #include <string>
 #include <math.h>
 #include <thread>
-#include <random>
-#include <smurf_processor.h>
-
 
 #include "SampleData.h"
 #include "G3StreamWriter.h"
@@ -29,13 +28,8 @@
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
-// Downsampling factor. We'll be receiving already filtered and downsampled data
-// So this is just to make sure file sizes are right.
-#define DSFactor 1
-
-// Maps from 16 int to +/- pi
+// Maps from raw data to int to +/- pi
 double toPhase(int32_t phase_int){return phase_int * M_PI / (1 << 15);}
-
 
 /*
     Params:
@@ -81,6 +75,7 @@ void G3StreamWriter::run(){
 
     printf("Starting run thread for G3Streamer\n");
     running = true;
+
     while (running){
         usleep(frame_time * 1000000);
 
@@ -126,7 +121,6 @@ void G3StreamWriter::stop(){
     running = false;
     run_thread.join();
     printf("Stopped Stream.\n");
-
 }
 
 
@@ -158,7 +152,6 @@ BOOST_PYTHON_MODULE(G3StreamWriter) {
                 bp::arg("max_queue_size")=100
             )
         ))
-        .def("run", &G3StreamWriter::run)
         .def("stop", &G3StreamWriter::stop)
         .def("printTransmitStatistic", &G3StreamWriter::printTransmitStatistic)
         .def("setDebug",  &G3StreamWriter::setDebug)

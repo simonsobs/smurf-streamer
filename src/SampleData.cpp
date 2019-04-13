@@ -45,7 +45,7 @@ SampleData::SampleData(smurf_tx_data_t* buffer):
 {
     header->copy_header(buffer);
 
-    // Copies data from buffer
+    // Copies channel data from buffer
     uint offset;
     for (uint i = 0; i < smurfsamples; i++){
         offset = i * sizeof(avgdata_t) + smurfheaderlength;

@@ -37,7 +37,6 @@ public:
     std::thread run_thread;
 
     float frame_time;
-    int count;
 
     G3IntPtr frame_num;
     G3IntPtr session_id;
