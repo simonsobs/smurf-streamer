@@ -7,6 +7,8 @@ data/
 build/
 python/*.so
 fw/pyrogue
+
+fw/pyrogue
 .ipynb_checkpoints/
 *.ipynb
 *.swp
