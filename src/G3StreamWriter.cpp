@@ -23,13 +23,11 @@
 
 #include "SampleData.h"
 #include "G3StreamWriter.h"
-
+#include "StreamConfig.h"
 
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
-// Maps from raw data to int to +/- pi
-double toPhase(int32_t phase_int){return phase_int * M_PI / (1 << 15);}
 
 /*
     Params:
@@ -40,12 +38,13 @@ double toPhase(int32_t phase_int){return phase_int * M_PI / (1 << 15);}
                                 10000, but can be decreasod once we start getting
                                 downsampled dat.
 */
-G3StreamWriter::G3StreamWriter(int port, float frame_time, int max_queue_size):
+G3StreamWriter::G3StreamWriter(std::string config_file):
         SmurfProcessor(),
-        frame_time(frame_time),
+        config(config_file),
+        frame_time(config.frame_time),
         ts_map(new G3TimestreamMap),
         chan_keys(new G3VectorString(smurfsamples)),
-        writer(new G3NetworkSender("*", port, max_queue_size)),
+        writer(new G3NetworkSender("*", config.port, config.max_queue_size)),
         sample_buffer(),
         run_thread(&G3StreamWriter::run, this),
         frame_num(new G3Int(0)), running(true)
@@ -132,10 +131,8 @@ void G3StreamWriter::transmit(smurf_tx_data_t* data){
     sample_buffer.write(sample);
 };
 
-boost::shared_ptr<G3StreamWriter> G3StreamWriterInit(
-        int port=4536, float frame_time=1, int max_queue_size=100
-    ){
-        boost::shared_ptr<G3StreamWriter> writer(new G3StreamWriter(port, frame_time, max_queue_size));
+boost::shared_ptr<G3StreamWriter> G3StreamWriterInit(std::string config_file="config.txt"){
+        boost::shared_ptr<G3StreamWriter> writer(new G3StreamWriter(config_file));
         return writer;
 }
 
@@ -146,11 +143,7 @@ BOOST_PYTHON_MODULE(G3StreamWriter) {
                     bp::bases<ris::Slave>, boost::noncopyable >("G3StreamWriter",
                     bp::no_init)
         .def("__init__", bp::make_constructor(
-            &G3StreamWriterInit, bp::default_call_policies(), (
-                bp::arg("port")=4536,
-                bp::arg("frame_time")=1.0,
-                bp::arg("max_queue_size")=100
-            )
+            &G3StreamWriterInit, bp::default_call_policies(), (bp::arg("config_file")="config.txt")
         ))
         .def("stop", &G3StreamWriter::stop)
         .def("printTransmitStatistic", &G3StreamWriter::printTransmitStatistic)

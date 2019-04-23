@@ -245,5 +245,6 @@ else
 fi
 
 echo "Starting server..."
-cd /data/smurf-processor_config/
+# cd /data/smurf-processor_config/
+
 /usr/local/src/G3StreamWriter/scripts/control-server/python/pyrogue_server.py  ${args}

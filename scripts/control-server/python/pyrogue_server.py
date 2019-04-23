@@ -806,9 +806,9 @@ if __name__ == "__main__":
 
     ###### G3 Streamer options
     stream_g3 = True
-    g3_stream_port = 4536
-    g3_frame_time = 1. #[sec]
-    g3_max_queue_size = 1000
+    # g3_stream_port = 4536
+    # g3_frame_time = 1. #[sec]
+    # g3_max_queue_size = 1000
 
 
 
@@ -818,7 +818,7 @@ if __name__ == "__main__":
             "ha:sp:e:d:nb:f:c:l:u:",
             ["help", "addr=", "server", "pyro=", "epics=", "defaults=", "nopoll",
             "stream-size=", "stream-type=", "commType=", "pcie-rssi-link=", "dump-pvs=",
-            "no-g3-stream", "g3-port=", "g3-frame-time=","g3-max-queue-size="])
+            "no-g3-stream", "stream-config="])
 
     except getopt.GetoptError:
         usage(sys.argv[0])
@@ -865,30 +865,15 @@ if __name__ == "__main__":
             pv_dump_file = arg
         elif opt in ("--no-g3-stream"):
             stream_g3 = False
-        elif opt in ("--g3-port"):
-            try:
-                g3_stream_port = int(arg)
-            except ValueError:
-                exit_message("ERROR: Invalid out G3 stream port")
-        elif opt in ("--g3-frame-time"):
-            try:
-                g3_frame_time = float(arg)
-            except:
-                exit_message("Error: Invalid G3 stream rate. Must be float")
-        elif opt in ("--g3-max-queue-size"):
-            try:
-                g3_max_queue_size = int(arg)
-            except:
-                exit_message("Error: Invalid G3 max queue size. Must be int")
-
-
-
+        elif opt in ("--stream-config"):
+            stream_config_fname = arg
 
     if stream_g3:
-        g3_streamwriter = G3StreamWriter.G3StreamWriter(   port=g3_stream_port,
-                                            frame_time=g3_frame_time,
-                                            max_queue_size=g3_max_queue_size,
-                                        )
+        g3_streamwriter = G3StreamWriter.G3StreamWriter(config_file=stream_config_fname)
+        # port=g3_stream_port,
+        #                                     frame_time=g3_frame_time,
+        #                                     max_queue_size=g3_max_queue_size,
+        #                                 )
     else:
         g3_streamwriter = None
 

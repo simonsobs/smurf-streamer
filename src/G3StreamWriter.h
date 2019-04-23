@@ -14,6 +14,7 @@
 #include <smurf_processor.h>
 #include <thread>
 #include "SampleData.h"
+#include "StreamConfig.h"
 
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
@@ -21,8 +22,9 @@ namespace bp = boost::python;
 class G3StreamWriter: public SmurfProcessor{
 public:
 
-    G3StreamWriter(int port, float frame_time, int max_queue_size);
+    G3StreamWriter(std::string config_file);
 
+    void read_config(std::string filename);
     // Called whenever frame is passed from master
     // void acceptFrame ( ris::FramePtr frame );
     void transmit(smurf_tx_data_t* data);
@@ -31,6 +33,8 @@ public:
     void run();
     void stop();
     bool running;
+
+    StreamConfig config;
 
     SampleBuffer sample_buffer;
 
