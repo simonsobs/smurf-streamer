@@ -59,8 +59,12 @@ G3StreamWriter::G3StreamWriter(std::string config_file):
     f->Put("session_start_time", session_start_time);
     writer->Process(f, junk);
 
+
+
     for (int i = 0; i < smurfsamples; i++){
         timestreams[i] = G3TimestreamPtr(new G3Timestream());
+        timestreams[i]->units= G3Timestream::Counts;
+        timestreams[i]->SetFLACCompression(config.flac_level);
         (*chan_keys)[i] = std::to_string(i);
         ts_map->insert(std::make_pair((*chan_keys)[i], timestreams[i]));
     }
@@ -96,7 +100,6 @@ void G3StreamWriter::run(){
                 if (i == 0)
                     timestreams[j]->start = x->timestamp;
                 (*timestreams[j])[i] = x->data[j];
-                // (*timestreams[j])[i] = toPhase(x->data[j]);
             }
         }
         for (int i = 0; i < smurfsamples; i++)

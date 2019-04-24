@@ -36,7 +36,7 @@ public:
     int read_count;
     std::vector<SampleDataPtr> read_buffer;
 
-    SampleBuffer(int size=1024):
+    SampleBuffer(long size=1024):
         read_buffer(size), write_buffer(size),
         read_count(0), write_count(0){}
 

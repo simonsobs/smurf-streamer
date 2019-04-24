@@ -25,8 +25,8 @@ public:
                     frame_time = std::stof(value);
                 else if (name == "max_queue_size")
                     max_queue_size = std::stoi(value);
-                else if (name == "flac_encoding")
-                    flac_encoding = std::stoi(value);
+                else if (name == "flac_level")
+                    flac_level = std::stoi(value);
             }
         }
     };
@@ -34,6 +34,6 @@ public:
     int port;
     float frame_time;
     float max_queue_size;
-    int flac_encoding;
+    int flac_level;
 };
 #endif

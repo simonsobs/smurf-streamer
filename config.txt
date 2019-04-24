@@ -1,4 +1,4 @@
 port = 4536
-frame_time = 1.0
+frame_time = 1.
 max_queue_size = 100
-flac_encoding = 9
+flac_level = 0
