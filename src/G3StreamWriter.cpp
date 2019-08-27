@@ -44,7 +44,7 @@ G3StreamWriter::G3StreamWriter(std::string config_file):
         frame_time(config.frame_time),
         ts_map(new G3TimestreamMap),
         chan_keys(new G3VectorString(smurfsamples)),
-        writer(new G3NetworkSender("*", config.port, config.max_queue_size)),
+        writer(G3NetworkSender("*", config.port, config.max_queue_size)),
         sample_buffer(),
         run_thread(&G3StreamWriter::run, this),
         frame_num(new G3Int(0)), running(true)
@@ -57,7 +57,7 @@ G3StreamWriter::G3StreamWriter(std::string config_file):
     std::deque<G3FramePtr> junk;
     f->Put("session_id", session_id);
     f->Put("session_start_time", session_start_time);
-    writer->Process(f, junk);
+    writer.Process(f, junk);
 
 
 
@@ -80,6 +80,7 @@ void G3StreamWriter::run(){
     running = true;
 
     while (running){
+        printf("HERE\n");
         usleep(frame_time * 1000000);
 
         // Swaps buffers so that we can continue accepting new frames.
@@ -92,18 +93,18 @@ void G3StreamWriter::run(){
         for (int i = 0; i < smurfsamples; i++)
             timestreams[i]->resize(nsamples);
 
-        SampleDataPtr x;
+        SmurfPacket_RO p;
         for (int i = 0; i < nsamples; i ++){
-            x = sample_buffer.read_buffer[i];
+            p = sample_buffer.read_buffer[i];
 
             for (int j = 0; j < smurfsamples; j++){
-                if (i == 0)
-                    timestreams[j]->start = x->timestamp;
-                (*timestreams[j])[i] = x->data[j];
+                // if (i == 0)
+                //     timestreams[j]->start = x->timestamp;
+                (*timestreams[j])[i] = p->getValue(j);
             }
         }
-        for (int i = 0; i < smurfsamples; i++)
-            timestreams[i]->stop = x->timestamp;
+        // for (int i = 0; i < smurfsamples; i++)
+        //     timestreams[i]->stop = x->timestamp;
 
         G3FramePtr f(new G3Frame(G3Frame::Scan));
         std::deque<G3FramePtr> junk;
@@ -113,7 +114,7 @@ void G3StreamWriter::run(){
         f->Put("session_id", session_id);
 
         printf("Writing %lu samples @ %.2f Hz\n", ts_map->NSamples(), ts_map->GetSampleRate() / G3Units::Hz);
-        writer->Process(f, junk);
+        writer.Process(f, junk);
         frame_num->value+=1;
     }
 }
@@ -126,12 +127,13 @@ void G3StreamWriter::stop(){
 }
 
 
-void G3StreamWriter::transmit(smurf_tx_data_t* data){
+void G3StreamWriter::transmit(SmurfPacket_RO packet){
+    printf("HERE\n");
     if (!running)
         return;
 
-    SampleDataPtr sample(new SampleData(data));
-    sample_buffer.write(sample);
+    // SampleDataPtr sample(new SampleData(data));
+    sample_buffer.write(packet);
 };
 
 boost::shared_ptr<G3StreamWriter> G3StreamWriterInit(std::string config_file="config.txt"){

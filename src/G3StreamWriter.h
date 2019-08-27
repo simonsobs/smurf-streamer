@@ -27,7 +27,7 @@ public:
     void read_config(std::string filename);
     // Called whenever frame is passed from master
     // void acceptFrame ( ris::FramePtr frame );
-    void transmit(smurf_tx_data_t* data);
+    void transmit(SmurfPacket_RO packet);
 
     // Streams data over G3Network
     void run();
@@ -48,6 +48,6 @@ public:
     G3TimestreamPtr timestreams[smurfsamples];
     G3TimestreamMapPtr ts_map;
 
-    G3NetworkSenderPtr writer;
+    G3NetworkSender writer;
 };
 #endif
