@@ -264,8 +264,8 @@ class LocalServer(pyrogue.Root):
             #pyrogue.streamConnect(base.FpgaTopLevel.stream.Application(0xC1), data_fifo) # new
             pyrogue.streamConnect(fpga.stream.application(0xC1), data_fifo)
             self.g3_streamwriter = g3_streamwriter
-
             if self.g3_streamwriter:
+                print("-------Attaching smurf-streamer-------")
                 pyrogue.streamConnect(data_fifo, self.g3_streamwriter)
 
             #pyrogue.streamTap(fpga.stream.application(0xC1), rx)
@@ -382,7 +382,7 @@ class LocalServer(pyrogue.Root):
                 name='smurfProcessorDebug',
                 description='Enable smurf processor transmit debug',
                 mode='RW',
-                value=True,
+                value=False,
                 localSet=lambda value: self.g3_streamwriter.setDebug(value),
                 hidden=False))
 
@@ -806,7 +806,7 @@ if __name__ == "__main__":
 
     ###### G3 Streamer options
     stream_g3 = True
-    # g3_stream_port = 4536
+    # sream_port = 4536
     # g3_frame_time = 1. #[sec]
     # g3_max_queue_size = 1000
 

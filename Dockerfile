@@ -1,4 +1,5 @@
 FROM tidair/smurf-processor-base:R2.0.0
+# FROM smurf-processor-base:R2.0.0
 
 # Installs spt3g to /usr/local/src/
 WORKDIR /usr/local/src/
@@ -36,3 +37,5 @@ RUN cmake .. && make
 #
 ENV PYTHONPATH /usr/local/src/smurf-streamer/python:${PYTHONPATH}
 ENV PATH /usr/local/src/smurf-processor-example/scripts/control-server:${PATH}
+
+WORKDIR /usr/local/src/smurf-streamer
