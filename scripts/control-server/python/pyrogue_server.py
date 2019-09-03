@@ -29,7 +29,7 @@ from pathlib import Path
 import pyrogue
 import pyrogue.utilities.fileio
 import rogue.interfaces.stream
-import G3StreamWriter
+import SmurfStreamer
 
 import gc
 gc.disable()
@@ -869,7 +869,7 @@ if __name__ == "__main__":
             stream_config_fname = arg
 
     if stream_g3:
-        g3_streamwriter = G3StreamWriter.G3StreamWriter(config_file=stream_config_fname)
+        g3_streamwriter = SmurfStreamer.SmurfStreamer(stream_config_fname)
         # port=g3_stream_port,
         #                                     frame_time=g3_frame_time,
         #                                     max_queue_size=g3_max_queue_size,

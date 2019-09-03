@@ -7,6 +7,18 @@
 
 class StreamConfig {
 public:
+    // Port to stream frames to.
+    int port;
+
+    // Amount of aggregation time before sending G3Frame
+    float frame_time;
+
+    // Max number of frames to hold in network queue
+    float max_queue_size;
+
+    // FLAC compression level for G3Timestreams
+    int flac_level;
+
     StreamConfig(std::string filename){
         std::ifstream cFile (filename);
         if (cFile.is_open()){
@@ -31,9 +43,5 @@ public:
         }
     };
 
-    int port;
-    float frame_time;
-    float max_queue_size;
-    int flac_level;
 };
 #endif

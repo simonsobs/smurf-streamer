@@ -24,7 +24,7 @@ cmake_minimum_required(VERSION 3.5)
 include(InstallRequiredSystemLibraries)
 
 # Project name
-project (G3StreamWriter)
+project (SmurfStreamer)
 
 # C/C++
 enable_language(CXX)
@@ -74,12 +74,12 @@ include_directories(${PROJECT_SOURCE_DIR}/include/)
 
 # Create rogue python library
 AUX_SOURCE_DIRECTORY(src SRC_FILES)
-add_library(G3StreamWriter SHARED ${SRC_FILES})
+add_library(SmurfStreamer SHARED ${SRC_FILES})
 
 # Set output to TOP/lib, remove lib prefix
-set_target_properties(G3StreamWriter PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/python)
-set_target_properties(G3StreamWriter PROPERTIES PREFIX "")
+set_target_properties(SmurfStreamer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/python)
+set_target_properties(SmurfStreamer PROPERTIES PREFIX "")
 
 # Link to rogue core
-TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${ROGUE_LIBRARIES} ${SMURF_LIBRARIES})
-TARGET_LINK_LIBRARIES(G3StreamWriter LINK_PUBLIC ${SPT3G_DIR}/build/spt3g/core.so)
+TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${ROGUE_LIBRARIES} ${SMURF_LIBRARIES})
+TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${SPT3G_DIR}/build/spt3g/core.so)
