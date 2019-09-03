@@ -1,33 +1,40 @@
-#ifndef _G3_STREAMWRITER_H
-#define _G3_STREAMWRITER_H
-
-#include <rogue/interfaces/stream/Slave.h>
-#include <rogue/interfaces/stream/Frame.h>
-#include <rogue/interfaces/stream/FrameIterator.h>
+#ifndef _SMURFSTREAMER_H
+#define _SMURFSTREAMER_H
 
 #include <G3Frame.h>
 #include <G3Timestream.h>
-#include <G3TimeStamp.h>
+
 #include <string>
 #include <mutex>
 #include <random>
-#include <smurf_processor.h>
 #include <thread>
+
+#include <smurf_processor.h>
+
 #include "SampleData.h"
 #include "StreamConfig.h"
 
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
-class G3StreamWriter: public SmurfProcessor{
+/*
+ * This module sends downsampled G3 frames with time-ordered-data over TCP using
+ * the G3NetworkSender. The SmurfProcessor object receives frames from ROGUE
+ * and downsamples them, passing the downsampled frames to the transmit method.
+ */
+
+class SmurfStreamer: public SmurfProcessor{
 public:
 
-    G3StreamWriter(std::string config_file);
+    SmurfStreamer(std::string config_file);
 
+    // Called by SmurfProcessor with downsampled data packet
+    void transmit(SmurfPacket_RO packet);
+
+    // Reads config file into config struct
     void read_config(std::string filename);
     // Called whenever frame is passed from master
     // void acceptFrame ( ris::FramePtr frame );
-    void transmit(smurf_tx_data_t* data);
 
     // Streams data over G3Network
     void run();
@@ -48,6 +55,6 @@ public:
     G3TimestreamPtr timestreams[smurfsamples];
     G3TimestreamMapPtr ts_map;
 
-    G3NetworkSenderPtr writer;
+    G3NetworkSender writer;
 };
 #endif

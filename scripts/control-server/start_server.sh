@@ -247,4 +247,4 @@ fi
 echo "Starting server..."
 # cd /data/smurf-processor_config/
 
-/usr/local/src/G3StreamWriter/scripts/control-server/python/pyrogue_server.py  ${args}
+/usr/local/src/smurf-streamer/scripts/control-server/python/pyrogue_server.py  ${args}

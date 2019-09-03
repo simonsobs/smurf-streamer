@@ -1,4 +1,4 @@
-# G3StreamWriter
+# SmurfStreamer
 
 ## Description
 -------------------

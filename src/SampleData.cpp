@@ -20,7 +20,7 @@ int SampleBuffer::swap(){
     return read_count;
 }
 
-void SampleBuffer::write(SampleDataPtr sample){
+void SampleBuffer::write(SmurfPacket_RO packet){
     int cur_size = write_buffer.size();
 
     if (write_count >= cur_size){
@@ -35,29 +35,29 @@ void SampleBuffer::write(SampleDataPtr sample){
     }
 
     mutex.lock();
-    write_buffer[write_count++] = sample;
+    write_buffer[write_count++] = packet;
     mutex.unlock();
 }
 
-SampleData::SampleData(smurf_tx_data_t* buffer):
-    header(new SmurfHeader()),
-    data(smurfsamples)
-{
-    header->copy_header(buffer);
-
-    // Copies channel data from buffer
-    uint offset;
-    for (uint i = 0; i < smurfsamples; i++){
-        offset = i * sizeof(avgdata_t) + smurfheaderlength;
-        data[i] = pull_bit_field(header->header, offset, sizeof(avgdata_t));
-    }
-
-    // Sets G3TimeStamp
-    // Is this the right timestamp to use?
-    uint64_t t = pull_bit_field(header->header, 48, 8);;
-    if (t == 0){
-        timestamp = G3Time::Now();
-    } else{
-        timestamp = G3Time(t * G3Units::ns);
-    }
-}
+// SampleData::SampleData(smurf_tx_data_t* buffer):
+//     header(new SmurfHeader()),
+//     data(smurfsamples)
+// {
+//     header->copy_header(buffer);
+//
+//     // Copies channel data from buffer
+//     uint offset;
+//     for (uint i = 0; i < smurfsamples; i++){
+//         offset = i * sizeof(avgdata_t) + smurfheaderlength;
+//         data[i] = pull_bit_field(header->header, offset, sizeof(avgdata_t));
+//     }
+//
+//     // Sets G3TimeStamp
+//     // Is this the right timestamp to use?
+//     uint64_t t = pull_bit_field(header->header, 48, 8);;
+//     if (t == 0){
+//         timestamp = G3Time::Now();
+//     } else{
+//         timestamp = G3Time(t * G3Units::ns);
+//     }
+// }

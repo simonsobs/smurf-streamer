@@ -8,6 +8,8 @@ build/
 python/*.so
 fw/pyrogue
 
+._docker-compose.yml
+
 fw/pyrogue
 .ipynb_checkpoints/
 *.ipynb

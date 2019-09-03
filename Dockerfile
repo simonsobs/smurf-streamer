@@ -1,11 +1,42 @@
-FROM grumpy.physics.yale.edu/smurf-g3-base:latest
+FROM tidair/smurf-processor-base:R2.0.0
+# FROM smurf-processor-base:R2.0.0
 
-COPY . G3StreamWriter
+# Installs spt3g to /usr/local/src/
+WORKDIR /usr/local/src/
+ENV TZ=America/New_York
 
-WORKDIR G3StreamWriter/build
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && apt-get install -y \
+    libflac-dev \
+    libnetcdf-dev \
+    libfftw3-dev \
+    libgsl0-dev \
+    tcl \
+    environment-modules \
+    && rm -rf /var/lib/apt/lists/*
+
+# Kind of a sketchy way to do this, but builds really quickly.
+COPY --from=simonsobs/spt3g:61a4c7b /app_lib/spt3g_software /usr/local/src/spt3g_software
+
+ENV SPT3G_SOFTWARE_PATH /usr/local/src/spt3g_software
+ENV SPT3G_SOFTWARE_BUILD_PATH /usr/local/src/spt3g_software/build
+ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
+
+#
+# RUN git clone https://github.com/CMB-S4/spt3g_software.git \
+#     && cd spt3g_software \
+#     && mkdir -p build \
+#     && cd build \
+#     && cmake .. -DPYTHON_EXECUTABLE=`which python3` \
+#     && make
+
+
+COPY . /usr/local/src/smurf-streamer
+WORKDIR /usr/local/src/smurf-streamer/build
 RUN cmake .. && make
-
-WORKDIR /usr/local/src/G3StreamWriter
-
-ENV PYTHONPATH /usr/local/src/G3StreamWriter/python:${PYTHONPATH}
+#
+ENV PYTHONPATH /usr/local/src/smurf-streamer/python:${PYTHONPATH}
 ENV PATH /usr/local/src/smurf-processor-example/scripts/control-server:${PATH}
+
+WORKDIR /usr/local/src/smurf-streamer
