@@ -3,15 +3,17 @@
 
 #include <G3Frame.h>
 #include <G3Timestream.h>
+#include <G3TimeStamp.h>
 
 #include <string>
 #include <mutex>
 #include <random>
 #include <thread>
+#include <utility>
 
 #include <smurf_processor.h>
 
-#include "SampleData.h"
+#include "DoubleQueue.h"
 #include "StreamConfig.h"
 
 namespace ris = rogue::interfaces::stream;
@@ -43,7 +45,7 @@ public:
 
     StreamConfig config;
 
-    SampleBuffer sample_buffer;
+    DoubleQueue<std::pair <G3Time, SmurfPacket_RO>> packet_queue;
 
     std::thread run_thread;
 
