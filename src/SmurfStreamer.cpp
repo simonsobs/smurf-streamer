@@ -17,31 +17,30 @@
 #include <G3Units.h>
 #include <G3NetworkSender.h>
 
+#include <utility>
 #include <string>
 #include <math.h>
 #include <thread>
 
-#include "SampleData.h"
 #include "SmurfStreamer.h"
 #include "StreamConfig.h"
 
 namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
-/*
-    Params:
-        int port: port that G3Frames will be written. Defalts 4536
-        int frame_time: Time per G3Frame (seconds)
-        int max_queue_size: Max queue size for G3NetworkStreamer
-        int sample_buff_size: Size of Frame buffer that stores data. Defaults to
-                                10000, but can be decreasod once we start getting
-                                downsampled dat.
-*/
+//  Function for converting smurf timestamp to G3Time
+G3Time smurf_to_G3Time(uint64_t time){
+
+    // This might not be the correct conversion if the timestamps are wrt
+    // different years... Need to check when we actually get data.
+    return G3Time(time * G3Units::seconds);
+}
+
 SmurfStreamer::SmurfStreamer(std::string config_file):
         SmurfProcessor(),
         config(config_file), frame_time(config.frame_time),
         ts_map(new G3TimestreamMap), chan_keys(new G3VectorString(smurfsamples)),
-        frame_num(new G3Int(0)), sample_buffer(),
+        frame_num(new G3Int(0)),
         writer(G3NetworkSender("*", config.port, config.max_queue_size))
 {
     G3TimePtr session_start_time = G3TimePtr(new G3Time(G3Time::Now()));
@@ -76,32 +75,49 @@ void SmurfStreamer::run(){
 
     running = true;
     while (running){
+
         usleep(frame_time * 1000000);
 
-        // Swaps buffers so that we can continue accepting new frames.
-        int nsamples = sample_buffer.swap();
+        packet_queue.swap();
+        // Puts packet queue's write buffer into the read_queue
 
+        int nsamples = packet_queue.read_queue.size();
         if (nsamples == 0)
             continue;
 
-        printf("Received %d samples\n", nsamples);
+        G3Time ts; // Packet timestamp
+        SmurfPacket_RO p; // Packet
 
-        // Reads sample data into TimestreamMap
-        for (int i = 0; i < smurfsamples; i++)
+        // Resizes timestreams to fit current queue
+        // and sets start and end times
+        for (int i = 0; i < smurfsamples; i++){
             timestreams[i]->resize(nsamples);
 
-        SmurfPacket_RO p;
-        for (int i = 0; i < nsamples; i ++){
-            p = sample_buffer.read_buffer[i];
+            ts = packet_queue.read_queue.front().first;
+            p = packet_queue.read_queue.front().second;
+            if (i==0)
+                printf("Start time: %s\n", ts.isoformat().c_str());
+            if (p->getCounter2() != 0)
+                timestreams[i]->start = smurf_to_G3Time(p->getCounter2());
+            else
+                timestreams[i]->start = ts;
 
-            for (int j = 0; j < smurfsamples; j++){
-                // if (i == 0)
-                //     timestreams[j]->start = x->timestamp;
-                (*timestreams[j])[i] = p->getValue(j);
-            }
+            ts = packet_queue.read_queue.back().first;
+            p = packet_queue.read_queue.back().second;
+            if (p->getCounter2() != 0)
+                timestreams[i]->stop = smurf_to_G3Time(p->getCounter2());
+            else
+                timestreams[i]->stop = ts;
         }
-        // for (int i = 0; i < smurfsamples; i++)
-        //     timestreams[i]->stop = x->timestamp;
+
+        for (int i = 0; i < nsamples; i++){
+            p = packet_queue.read_queue.front().second;
+
+            for (int j = 0; j < smurfsamples; j++)
+                (*timestreams[j])[i] = p->getValue(j);
+
+            packet_queue.read_queue.pop();
+        }
 
         G3FramePtr f(new G3Frame(G3Frame::Scan));
         std::deque<G3FramePtr> junk;
@@ -126,9 +142,7 @@ void SmurfStreamer::stop(){
 void SmurfStreamer::transmit(SmurfPacket_RO packet){
     if (!running)
         return;
-
-    // SampleDataPtr sample(new SampleData(data));
-    sample_buffer.write(packet);
+    packet_queue.push(std::make_pair (G3Time::Now(), packet));
 };
 
 boost::shared_ptr<SmurfStreamer> SmurfStreamerInit(std::string config_file="config.txt"){

@@ -32,9 +32,10 @@ ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
 #     && make
 
 
-COPY . /usr/local/src/smurf-streamer
+COPY --chown=cryo:smurf . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build
 RUN cmake .. && make
+
 #
 ENV PYTHONPATH /usr/local/src/smurf-streamer/python:${PYTHONPATH}
 ENV PATH /usr/local/src/smurf-processor-example/scripts/control-server:${PATH}
