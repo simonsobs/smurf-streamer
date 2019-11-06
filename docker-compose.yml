@@ -1,6 +1,7 @@
-version: '3.2'
+version: '3.7'
+
 services:
-    smurf-streamer:
+    smurf-streamer: &smurf-streamer
         image: "smurf-streamer"
         build: .
         container_name: smurf-streamer
@@ -8,17 +9,20 @@ services:
         volumes:
             - ${HOME}:${HOME}
             - /data:/data
-            - ./fw:/tmp/fw/
-            - ./scripts/:/usr/local/src/smurf-streamer/scripts
-            - ./smurf.cfg:/usr/local/src/smurf-streamer/smurf.cfg
-            - ./config.txt:/usr/local/src/smurf-streamer/config.txt
-            - ./mask.txt:/usr/local/src/smurf-streamer/mask.txt
-        entrypoint: /usr/local/src/smurf-streamer/scripts/control-server/start_server.sh
+            - ./fw/current:/tmp/fw/
+            - ./scripts:/usr/local/src/smurf-streamer/scripts/
+        entrypoint: python3 scripts/start_stream.py
         command: >
-            -D -a 192.168.2.20 -e smurf_server -c eth-rssi-interleaved
-            -d /tmp/fw/config/defaults.yml -f Int16 -b 524288
-            --stream-config /usr/local/src/smurf-streamer/config.txt
+            -a 192.168.2.11
+            -z /tmp/fw/Kcu105Eth-0x00000101-20190805161102-ruckman-5ecec57-works.zip
+        # Debug options
+        ####################
+        # security_opt:
+        #     - seccomp=unconfined
+        # cap_add:
+        #     - SYS_PTRACE
         # entrypoint: bash
         # command: []
-        stdin_open: true
-        tty: true
+        # stdin_open: true
+        # tty: true
+        ####################

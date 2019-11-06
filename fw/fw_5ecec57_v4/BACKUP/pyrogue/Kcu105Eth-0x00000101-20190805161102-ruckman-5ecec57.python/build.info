@@ -1,0 +1,78 @@
+tag build-Kcu105Eth-0x00000101-20190805161102-ruckman
+Tagger: Larry Ruckman <ruckman@slac.stanford.edu>
+Date:   Mon Aug 5 18:31:58 2019 -0700
+
+PROJECT: Kcu105Eth
+
+FW_VERSION: 0x00000101
+
+BUILD_STRING: Kcu105Eth: Vivado v2018.3, rdsrv107.slac.stanford.edu (x86_64), Built Mon Aug  5 16:11:02 PDT 2019 by ruckman
+
+commit 5ecec5755745d48ab83aae88082e2561e50021b0
+Author: Larry Ruckman <ruckman@slac.stanford.edu>
+Date:   Mon Aug 5 16:07:10 2019 -0700
+
+    updating AppTop.vhd
+
+diff --git a/firmware/common/AppTop/rtl/AppTop.vhd b/firmware/common/AppTop/rtl/AppTop.vhd
+index 3f110e7..6a8231c 100644
+--- a/firmware/common/AppTop/rtl/AppTop.vhd
++++ b/firmware/common/AppTop/rtl/AppTop.vhd
+@@ -152,10 +152,10 @@ architecture mapping of AppTop is
+    signal obTimingEthMaster : AxiStreamMasterType;
+    signal obTimingEthSlave  : AxiStreamSlaveType;
+ 
+-   signal obAxisMasters     : AxiStreamMasterArray(NUM_APP_STRMS_C - 1 downto 0);
+-   signal obAxisSlaves      : AxiStreamSlaveArray (NUM_APP_STRMS_C - 1 downto 0);
+-   signal ibAxisMasters     : AxiStreamMasterArray(NUM_APP_STRMS_C - 1 downto 0);
+-   signal ibAxisSlaves      : AxiStreamSlaveArray (NUM_APP_STRMS_C - 1 downto 0);
++   signal obAxisMasters     : AxiStreamMasterArray(NUM_APP_STRMS_C - 1 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
++   signal obAxisSlaves      : AxiStreamSlaveArray (NUM_APP_STRMS_C - 1 downto 0) := (others=>AXI_STREAM_SLAVE_FORCE_C);
++   signal ibAxisMasters     : AxiStreamMasterArray(NUM_APP_STRMS_C - 1 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
++   signal ibAxisSlaves      : AxiStreamSlaveArray (NUM_APP_STRMS_C - 1 downto 0) := (others=>AXI_STREAM_SLAVE_FORCE_C);
+ 
+    signal timingClk         : sl;
+    signal timingRst         : sl;
+@@ -239,8 +239,8 @@ begin
+             RSSI_SIZE_G     => RSSI_SIZE_C,
+             RSSI_STRM_CFG_G => RSSI_STRM_CFG_C,
+             RSSI_ROUTES_G   => RSSI_ROUTES_C,
+-            UDP_SRV_SIZE_G  => 2,
+-            UDP_SRV_PORTS_G => (0 => 8197, 1 => 8195),
++            UDP_SRV_SIZE_G  => 1,
++            UDP_SRV_PORTS_G => (0 => 8195),
+             UDP_CLT_SIZE_G  => 1,
+             UDP_CLT_PORTS_G => (0 => 8196)
+          )
+@@ -261,14 +261,10 @@ begin
+             rssiObMasters      => rssiObMasters,
+             rssiObSlaves       => rssiObSlaves,
+             -- UDP Interface
+-            udpIbSrvMasters(0) => obTimingEthMaster,
+-            udpIbSrvMasters(1) => obAxisMasters(APP_DEBUG_STRM_C),
+-            udpIbSrvSlaves(0)  => obTimingEthSlave,
+-            udpIbSrvSlaves(1)  => obAxisSlaves (APP_DEBUG_STRM_C),
+-            udpObSrvMasters(0) => ibTimingEthMaster,
+-            udpObSrvMasters(1) => ibAxisMasters(APP_DEBUG_STRM_C),
+-            udpObSrvSlaves(0)  => ibTimingEthSlave,
+-            udpObSrvSlaves(1)  => ibAxisSlaves(APP_DEBUG_STRM_C),
++            udpIbSrvMasters(0) => obAxisMasters(APP_DEBUG_STRM_C),
++            udpIbSrvSlaves(0)  => obAxisSlaves (APP_DEBUG_STRM_C),
++            udpObSrvMasters(0) => ibAxisMasters(APP_DEBUG_STRM_C),
++            udpObSrvSlaves(0)  => ibAxisSlaves(APP_DEBUG_STRM_C),
+ 
+             udpIbCltMasters(0) => obAxisMasters(APP_BPCLT_STRM_C),
+             udpIbCltSlaves (0) => obAxisSlaves (APP_BPCLT_STRM_C),
+diff --git a/firmware/targets/XilinxKCU105DevBoard/Kcu105Eth/Makefile b/firmware/targets/XilinxKCU105DevBoard/Kcu105Eth/Makefile
+index 68bac0d..4b9fc05 100644
+--- a/firmware/targets/XilinxKCU105DevBoard/Kcu105Eth/Makefile
++++ b/firmware/targets/XilinxKCU105DevBoard/Kcu105Eth/Makefile
+@@ -10,7 +10,7 @@ export TIMING_EXT_PKG = 1
+ #export PROJECT=MyProject
+ 
+ # Define Firmware Version Number
+-export PRJ_VERSION = 0x00000100
++export PRJ_VERSION = 0x00000101
+ 
+ # Define target part
+ export PRJ_PART = XCKU040-FFVA1156-2-E

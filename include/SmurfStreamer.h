@@ -11,13 +11,16 @@
 #include <thread>
 #include <utility>
 
-#include <smurf_processor.h>
+#include "smurf/core/transmitters/BaseTransmitter.h"
 
 #include "DoubleQueue.h"
 #include "StreamConfig.h"
 
-namespace ris = rogue::interfaces::stream;
+// TEMPORARY!!!!
+#define smurfsamples 528
+
 namespace bp = boost::python;
+namespace sct = smurf::core::transmitters;
 
 /*
  * This module sends downsampled G3 frames with time-ordered-data over TCP using
@@ -25,13 +28,13 @@ namespace bp = boost::python;
  * and downsamples them, passing the downsampled frames to the transmit method.
  */
 
-class SmurfStreamer: public SmurfProcessor{
+class SmurfStreamer: public sct::BaseTransmitter{
 public:
 
     SmurfStreamer(std::string config_file);
 
     // Called by SmurfProcessor with downsampled data packet
-    void transmit(SmurfPacket_RO packet);
+    void transmit(SmurfPacketROPtr packet);
 
     // Reads config file into config struct
     void read_config(std::string filename);
@@ -43,9 +46,10 @@ public:
     void stop();
     bool running;
 
+
     StreamConfig config;
 
-    DoubleQueue<std::pair <G3Time, SmurfPacket_RO>> packet_queue;
+    DoubleQueue<std::pair <G3Time, SmurfPacketROPtr>> packet_queue;
 
     std::thread run_thread;
 

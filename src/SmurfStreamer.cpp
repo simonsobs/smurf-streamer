@@ -3,7 +3,6 @@
 #include <rogue/interfaces/stream/FrameIterator.h>
 #include <rogue/GilRelease.h>
 
-#include <smurf_processor.h>
 
 #include <boost/python.hpp>
 #include <boost/python/module.hpp>
@@ -25,7 +24,14 @@
 #include "SmurfStreamer.h"
 #include "StreamConfig.h"
 
-namespace ris = rogue::interfaces::stream;
+#include "smurf/core/transmitters/BaseTransmitter.h"
+
+// Temporary measure until this builds
+#define smurfsamples 528
+
+
+namespace sct = smurf::core::transmitters;
+// namespace ris = rogue::interfaces::stream;
 namespace bp = boost::python;
 
 //  Function for converting smurf timestamp to G3Time
@@ -37,7 +43,7 @@ G3Time smurf_to_G3Time(uint64_t time){
 }
 
 SmurfStreamer::SmurfStreamer(std::string config_file):
-        SmurfProcessor(),
+        sct::BaseTransmitter(),
         config(config_file), frame_time(config.frame_time),
         ts_map(new G3TimestreamMap), chan_keys(new G3VectorString(smurfsamples)),
         frame_num(new G3Int(0)),
@@ -75,7 +81,7 @@ void SmurfStreamer::run(){
 
     running = true;
     while (running){
-
+        printf("HERE!\n");
         usleep(frame_time * 1000000);
 
         packet_queue.swap();
@@ -86,7 +92,7 @@ void SmurfStreamer::run(){
             continue;
 
         G3Time ts; // Packet timestamp
-        SmurfPacket_RO p; // Packet
+        SmurfPacketROPtr p; // Packet
 
         // Resizes timestreams to fit current queue
         // and sets start and end times
@@ -97,15 +103,15 @@ void SmurfStreamer::run(){
             p = packet_queue.read_queue.front().second;
             if (i==0)
                 printf("Start time: %s\n", ts.isoformat().c_str());
-            if (p->getCounter2() != 0)
-                timestreams[i]->start = smurf_to_G3Time(p->getCounter2());
+            if (p->getHeader()->getUnixTime() != 0)
+                timestreams[i]->start = smurf_to_G3Time(p->getHeader()->getUnixTime());
             else
                 timestreams[i]->start = ts;
 
             ts = packet_queue.read_queue.back().first;
             p = packet_queue.read_queue.back().second;
-            if (p->getCounter2() != 0)
-                timestreams[i]->stop = smurf_to_G3Time(p->getCounter2());
+            if (p->getHeader()->getUnixTime() != 0)
+                timestreams[i]->stop = smurf_to_G3Time(p->getHeader()->getUnixTime());
             else
                 timestreams[i]->stop = ts;
         }
@@ -114,7 +120,7 @@ void SmurfStreamer::run(){
             p = packet_queue.read_queue.front().second;
 
             for (int j = 0; j < smurfsamples; j++)
-                (*timestreams[j])[i] = p->getValue(j);
+                (*timestreams[j])[i] = p->getData(j);
 
             packet_queue.read_queue.pop();
         }
@@ -139,31 +145,32 @@ void SmurfStreamer::stop(){
     printf("Stopped Stream.\n");
 }
 
-void SmurfStreamer::transmit(SmurfPacket_RO packet){
+void SmurfStreamer::transmit(SmurfPacketROPtr packet){
+    printf("Transmit...\n");
+    fflush(stdout);
+    return;
     if (!running)
         return;
     packet_queue.push(std::make_pair (G3Time::Now(), packet));
 };
 
-boost::shared_ptr<SmurfStreamer> SmurfStreamerInit(std::string config_file="config.txt"){
-        boost::shared_ptr<SmurfStreamer> writer(new SmurfStreamer(config_file));
-        return writer;
+std::shared_ptr<SmurfStreamer> SmurfStreamerInit(std::string config_file="config.txt"){
+    std::shared_ptr<SmurfStreamer> writer(new SmurfStreamer(config_file));
+    return writer;
 }
 
 BOOST_PYTHON_MODULE(SmurfStreamer) {
     PyEval_InitThreads();
     try {
-        bp::class_<SmurfStreamer, boost::shared_ptr<SmurfStreamer>,
+        bp::class_<SmurfStreamer, std::shared_ptr<SmurfStreamer>,
                     bp::bases<ris::Slave>, boost::noncopyable >
                     ("SmurfStreamer", bp::no_init)
         .def("__init__", bp::make_constructor(
             &SmurfStreamerInit, bp::default_call_policies(), (bp::arg("config_file")="config.txt")
         ))
         .def("stop", &SmurfStreamer::stop)
-        .def("printTransmitStatistic", &SmurfStreamer::printTransmitStatistic)
-        .def("setDebug",  &SmurfStreamer::setDebug)
         ;
-        bp::implicitly_convertible<boost::shared_ptr<SmurfStreamer>, ris::SlavePtr>();
+        bp::implicitly_convertible<std::shared_ptr<SmurfStreamer>, ris::SlavePtr>();
     } catch (...) {
         printf("Failed to load module. import rogue first\n");
     }
