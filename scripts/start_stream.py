@@ -22,9 +22,14 @@ def make_parser(parser = None):
     parser.add_argument('--zip', '-z',
         help="Pyrogue zip file to be included in python path"
     )
-    parser.add_argument('--addr', '-a', required=True,
+    parser.add_argument('--addr', '-a',
         help="FPGA IP address. Required when the communication iss based off on Ethernet."
     )
+    parser.add_argument('--shelf-manager','-S', help="ATCA shelfmanager node name")
+    parser.add_argument('--slot', '-N', type=int, choices=[1,2,3,4,5,6],
+        help="ATCA Crate slot number"
+    )
+
     parser.add_argument('--gui', '-g', action='store_true',
         help="Starts the server with a gui"
     )
@@ -87,10 +92,36 @@ def check_address(address):
     except subprocess.CalledProcessError:
        exit_message("    ERROR: FPGA can't be reached!")
 
+def find_shelf_ip(shelf_manager, slot):
+    print(f"Running find_shelf_ip with shelf {shelf_manager} and slot {slot}")
+    ipmb = 128 + 2 * slot
+
+    # I have no idea what this does. Stolen from:
+    # https://github.com/slaclab/pysmurf/blob/0a64ffdb268c87cb59505511360faa6bd602a013/docker/server/scripts/start_server.sh#L84
+    crate_id_cmd = f"ipmitool -I lan -H {shelf_manager} -t {ipmb} -b 0 -A NONE raw 0x34 0x04 0xFD 0x02"
+
+    proc = subprocess.run(crate_id_cmd, shell=True, check=True, stdout=subprocess.PIPE)
+    crate_id_list = proc.stdout.strip().split()
+    crate_id_list.reverse()
+    crate_id_list = list(map(lambda x: int(x, 16), crate_id_list))
+
+    ip_addr = f"10.{crate_id_list[0]}.{crate_id_list[1]}.{100 + slot}"
+
+    print(f"Found IP address: {ip_addr}")
+    return ip_addr
 
 def main():
     parser = make_parser()
+
+    parser.add_argument('--dev', action='store_true',
+        help = "If true, use DevBoardEth context manager instead of CmbEth"
+    )
+
     args = parser.parse_args()
+
+    if args.addr is None:
+        assert (args.shelf_manager is not None and args.slot is not None)
+        args.addr = find_shelf_ip(args.shelf_manager, args.slot)
 
     if args.zip and os.path.exists(args.zip):
         pyrogue.addLibraryPath(args.zip+"/python")
@@ -99,8 +130,6 @@ def main():
             config_file = args.zip + '/config/' + args.defaults
         else:
             config_file = args.defaults
-
-    from pysmurf.core.roots.DevBoardEth import DevBoardEth
 
     if args.disable_gc:
         import gc
@@ -116,10 +145,10 @@ def main():
         'dev_rssi': args.pcie_dev_rssi,
         'dev_data': args.pcie_dev_data,
     }
-    print("", flush=True)
+
     streamer = SmurfStreamer("SmurfStreamer", config_file="config.txt")
 
-    devboard_kwargs = {
+    root_kwargs = {
         'ip_addr':         args.addr,
         'config_file':     config_file,
         'epics_prefix':    args.epics,
@@ -135,12 +164,30 @@ def main():
         'pcie_dev_data':   args.pcie_dev_data,
         'txDevice':        streamer
     }
-    print("", flush=True)
+
+    if args.dev:
+        from pysmurf.core.roots.DevBoardEth import DevBoardEth as RootManager
+    else:
+        from pysmurf.core.roots.CmbEth import CmbEth as RootManager
 
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        with DevBoardEth(**devboard_kwargs) as root:
-            print("Running streamer.....")
-            pyrogue.waitCntrlC()
+        with RootManager(**root_kwargs) as root:
+            if args.gui:
+                # Start the GUI
+                print("Starting GUI...\n")
+                app_top = pyrogue.gui.application(sys.argv)
+                gui_top = pyrogue.gui.GuiTop(incGroups=None,excGroups=None)
+                gui_top.setWindowTitle(args.windows_title)
+                gui_top.addTree(root)
+                gui_top.resize(800,1000)
+                app_top.exec_()
+
+                print("Gui exited")
+                pyrogue.waitCntrlC()
+            else:
+                print("Running without gui.....")
+                pyrogue.waitCntrlC()
+
             streamer.stop()
 
 
