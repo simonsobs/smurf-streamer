@@ -1,2 +1,1 @@
-
-from sosmurf._SmurfStreamer import SmurfStreamer
+from sosmurf.SmurfTransmitter._SmurfTransmitter import SmurfTransmitter

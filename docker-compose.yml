@@ -13,16 +13,17 @@ services:
             - ./scripts:/usr/local/src/smurf-streamer/scripts/
         entrypoint: python3 scripts/start_stream.py
         command: >
-            -a 192.168.2.11
+            -a 192.168.2.11 -g
             -z /tmp/fw/Kcu105Eth-0x00000101-20190805161102-ruckman-5ecec57-works.zip
+            --dev
         # Debug options
         ####################
-        # security_opt:
-        #     - seccomp=unconfined
-        # cap_add:
-        #     - SYS_PTRACE
-        # entrypoint: bash
-        # command: []
-        # stdin_open: true
-        # tty: true
+        security_opt:
+            - seccomp=unconfined
+        cap_add:
+            - SYS_PTRACE
+        entrypoint: bash
+        command: []
+        stdin_open: true
+        tty: true
         ####################

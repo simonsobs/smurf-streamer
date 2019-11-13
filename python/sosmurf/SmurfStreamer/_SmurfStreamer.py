@@ -4,7 +4,7 @@
 
 import pyrogue
 import smurf
-import SmurfStreamer as StreamModule
+import sosmurfcore
 
 class SmurfStreamer(pyrogue.Device):
     """
@@ -12,7 +12,7 @@ class SmurfStreamer(pyrogue.Device):
     """
     def __init__(self, name, config_file="config.txt", **kwargs):
         pyrogue.Device.__init__(self, name=name, description='SMuRF G3 Streamer', **kwargs)
-        self._streamer = StreamModule.SmurfStreamer(config_file=config_file)
+        self._streamer = sosmurfcore.SmurfStreamer(config_file=config_file)
 
         # Add pyrogue variables here!!
 

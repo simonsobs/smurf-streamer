@@ -2,6 +2,7 @@ import pysmurf.core.devices
 import pyrogue.gui
 import argparse
 import sosmurf
+import sys
 
 def main():
     parser = sosmurf.util.make_smurf_parser()
@@ -15,7 +16,7 @@ def main():
 
     # streamer = sosmurf.SmurfStreamer("SmurfStreamer", config_file="config.txt")
 
-    transmitter = sosmurf.SmurfTransmitter("SOSmurfTransmitter")
+    transmitter = sosmurf.SmurfTransmitter("SOSmurfTransmitter", debug=True)
     root_kwargs['txDevice'] = transmitter
 
     if args.dev:
@@ -24,10 +25,12 @@ def main():
         from pysmurf.core.roots.CmbEth import CmbEth as RootManager
 
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
+        print("with PCIE", flush=True)
         with RootManager(**root_kwargs) as root:
+            print("With root", flush=True)
             if args.gui:
                 # Start the GUI
-                print("Starting GUI...\n")
+                print("Starting GUI...\n", flush=True)
                 app_top = pyrogue.gui.application(sys.argv)
                 gui_top = pyrogue.gui.GuiTop(incGroups=None,excGroups=None)
                 gui_top.setWindowTitle(args.windows_title)
@@ -35,7 +38,7 @@ def main():
                 gui_top.resize(800,1000)
                 app_top.exec_()
 
-                print("Gui exited")
+                print("Gui exited", flush=True)
                 pyrogue.waitCntrlC()
             else:
                 print("Running without gui.....")

@@ -4,17 +4,26 @@
 
 import pyrogue
 import smurf
-import SmurfStreamer as StreamModule
+import sosmurfcore
 
 class SmurfTransmitter(pyrogue.Device):
     """
-    Smurf Streamer python wrapper
+    Smurf Transmitter python wrapper
     """
-    def __init__(self, name, config_file="config.txt", **kwargs):
+    def __init__(self, name, debug=False, **kwargs):
         pyrogue.Device.__init__(self, name=name, description='SMuRF G3 Streamer', **kwargs)
-        self._streamer = StreamModule.SmurfStreamer(config_file=config_file)
+
+        self._transmitter = sosmurfcore.SmurfTransmitter(debug)
 
         # Add pyrogue variables here!!
+        self.add(pyrogue.LocalVariable(
+            name='Debug',
+            description='Set the debug mode',
+            mode='RW',
+            value=debug,
+            localSet=lambda value: self._transmitter.setDebug(value),
+            localGet=self._transmitter.getDebug
+        ))
 
     def _getStreamSlave(self):
-        return self._streamer
+        return self._transmitter
