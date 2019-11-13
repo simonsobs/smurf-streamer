@@ -1,8 +1,5 @@
 # Script to start smurf-streamer module
 
-# import pyrogue
-# import pyrogue.utilities.fileio
-# import rogue.interfaces.stream
 import pysmurf.core.devices
 
 import argparse
@@ -12,7 +9,7 @@ def main():
     parser = sosmurf.util.make_smurf_parser()
 
     parser.add_argument('--dev', action='store_true',
-        help = "If true, use DevBoardEth context manager instead of CmbEth"
+        help = "If set, use DevBoardEth context manager instead of CmbEth"
     )
 
     args = parser.parse_args()
