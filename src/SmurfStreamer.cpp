@@ -159,20 +159,14 @@ std::shared_ptr<SmurfStreamer> SmurfStreamerInit(std::string config_file="config
     return writer;
 }
 
-BOOST_PYTHON_MODULE(SmurfStreamer) {
-    PyEval_InitThreads();
-    try {
-        bp::class_<SmurfStreamer, std::shared_ptr<SmurfStreamer>,
-                    bp::bases<ris::Slave>, boost::noncopyable >
-                    ("SmurfStreamer", bp::no_init)
-        .def("__init__", bp::make_constructor(
-            &SmurfStreamerInit, bp::default_call_policies(), (bp::arg("config_file")="config.txt")
-        ))
-        .def("stop", &SmurfStreamer::stop)
-        ;
-        bp::implicitly_convertible<std::shared_ptr<SmurfStreamer>, ris::SlavePtr>();
-    } catch (...) {
-        printf("Failed to load module. import rogue first\n");
-    }
-    printf("Loaded my module\n");
-};
+void SmurfStreamer::setup_python(){
+    bp::class_<SmurfStreamer, std::shared_ptr<SmurfStreamer>,
+                bp::bases<ris::Slave>, boost::noncopyable >
+                ("SmurfStreamer", bp::no_init)
+    .def("__init__", bp::make_constructor(
+        &SmurfStreamerInit, bp::default_call_policies(), (bp::arg("config_file")="config.txt")
+    ))
+    .def("stop", &SmurfStreamer::stop)
+    ;
+    bp::implicitly_convertible<std::shared_ptr<SmurfStreamer>, ris::SlavePtr>();
+}
