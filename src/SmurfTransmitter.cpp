@@ -1,4 +1,5 @@
 #include "SmurfTransmitter.h"
+#include "SmurfSample.h"
 #include <iostream>
 
 
@@ -9,9 +10,24 @@ SmurfTransmitter::SmurfTransmitter(bool debug) : debug_(debug){
         printf("Starting SmurfTransmitter in debug mode...");
 }
 
-void SmurfTransmitter::transmit(SmurfPacketROPtr packet){
+void SmurfTransmitter::transmit(SmurfPacketROPtr sp){
     if (debug_){
-        printSmurfPacket(packet);
+        printSmurfPacket(sp);
+    }
+
+    // TODO: Get G3Time from smurf header...
+    G3Time ts = G3Time::Now();
+    size_t nchans = sp->getHeader()->getNumberChannels();
+    SmurfSamplePtr smurf_sample(new SmurfSample(ts, nchans));
+
+    auto samples = smurf_sample->Samples();
+    for (int i = 0; i < nchans; i++){
+        samples[i] = sp->getData(i); // I think this returns a reference. Do we want to copy?
+    }
+
+    // Sets TES Biases is SmurfSample
+    for (int i = 0; i < 16; i++){
+        smurf_sample->setTESBias(i, sp->getHeader()->getTESBias(i));
     }
 }
 
@@ -40,10 +56,10 @@ void printSmurfPacket(SmurfPacketROPtr sp){
     std::cout << std::endl;
 
     std::cout << "-----------------------" << std::endl;
-    std::cout << " DATA (up to the first 20 points):" << std::endl;
+    std::cout << " DATA (up to the first 5 points):" << std::endl;
     std::cout << "-----------------------" << std::endl;
 
-    std::size_t n{20};
+    std::size_t n{5};
     if (numCh < n)
         n = numCh;
 

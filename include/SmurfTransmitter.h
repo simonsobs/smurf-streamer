@@ -20,8 +20,6 @@ namespace sct = smurf::core::transmitters;
  *  Sample object passed to SmurfBuilder object
  */
 
-// void printSmurfPacket(SmurfPacketROPtr sp);
-
 class SmurfSampleFrameObject : public G3FrameObject{
 public:
     uint32_t seq;
