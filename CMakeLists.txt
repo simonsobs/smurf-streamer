@@ -84,6 +84,7 @@ add_library(SmurfStreamer SHARED ${SRC_FILES})
 # Set output to TOP/lib, remove lib prefix
 set_target_properties(SmurfStreamer PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set_target_properties(SmurfStreamer PROPERTIES PREFIX "")
+set_target_properties(SmurfStreamer PROPERTIES OUTPUT_NAME "sosmurfcore")
 
 # Link to rogue core
 TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${ROGUE_LIBRARIES} ${SMURF_LIBRARIES})

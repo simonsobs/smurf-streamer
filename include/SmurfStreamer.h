@@ -2,8 +2,13 @@
 #define _SMURFSTREAMER_H
 
 #include <G3Frame.h>
+#include <G3Writer.h>
+#include <G3Data.h>
+#include <G3Vector.h>
 #include <G3Timestream.h>
 #include <G3TimeStamp.h>
+#include <G3Units.h>
+#include <G3NetworkSender.h>
 
 #include <string>
 #include <mutex>
@@ -32,6 +37,8 @@ class SmurfStreamer: public sct::BaseTransmitter{
 public:
 
     SmurfStreamer(std::string config_file);
+
+    static void setup_python();
 
     // Called by SmurfProcessor with downsampled data packet
     void transmit(SmurfPacketROPtr packet);

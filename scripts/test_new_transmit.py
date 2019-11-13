@@ -1,5 +1,4 @@
 import pysmurf.core.devices
-import pyrogue
 import pyrogue.gui
 import argparse
 import sosmurf
@@ -14,8 +13,10 @@ def main():
     args = parser.parse_args()
     pcie_kwargs, root_kwargs = sosmurf.util.process_args(args)
 
-    streamer = sosmurf.SmurfStreamer("SmurfStreamer", config_file="config.txt")
-    root_kwargs['txDevice'] = streamer
+    # streamer = sosmurf.SmurfStreamer("SmurfStreamer", config_file="config.txt")
+
+    transmitter = sosmurf.SmurfTransmitter("SOSmurfTransmitter")
+    root_kwargs['txDevice'] = transmitter
 
     if args.dev:
         from pysmurf.core.roots.DevBoardEth import DevBoardEth as RootManager
