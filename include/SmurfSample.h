@@ -13,7 +13,7 @@
 
 class SmurfSample : public G3FrameObject{
 public:
-
+    SmurfSample() : G3FrameObject(), Timestamp(0) {}
     SmurfSample(G3Time time, size_t nsamples);
 
     SmurfPacketRO::data_t *Samples() const;
@@ -22,7 +22,7 @@ public:
 
     const int NSamples() const;
 
-    const G3Time Timestamp;
+    G3Time Timestamp;
 
     template <class A> void serialize(A &ar, unsigned v);
 
