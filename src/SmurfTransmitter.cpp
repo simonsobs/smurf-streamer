@@ -2,18 +2,23 @@
 #include "SmurfSample.h"
 #include <iostream>
 
+namespace sct = smurf::core::transmitters;
 
-SmurfTransmitter::SmurfTransmitter() : debug_(false){}
+//
 
-SmurfTransmitter::SmurfTransmitter(bool debug) : debug_(debug){
+SmurfTransmitter::SmurfTransmitter(G3EventBuilderPtr builder) :
+    sct::BaseTransmitter(), builder_(builder), debug_(false){}
+
+SmurfTransmitter::SmurfTransmitter(G3EventBuilderPtr builder, bool debug) :
+    sct::BaseTransmitter(), builder_(builder), debug_(debug){
+
     if (debug_)
-        printf("Starting SmurfTransmitter in debug mode...");
+        log_info("Starting SmurfTransmitter in debug mode...");
 }
 
 void SmurfTransmitter::transmit(SmurfPacketROPtr sp){
-    if (debug_){
+    if (debug_)
         printSmurfPacket(sp);
-    }
 
     // TODO: Get G3Time from smurf header...
     G3Time ts = G3Time::Now();
@@ -25,10 +30,12 @@ void SmurfTransmitter::transmit(SmurfPacketROPtr sp){
         samples[i] = sp->getData(i); // I think this returns a reference. Do we want to copy?
     }
 
-    // Sets TES Biases is SmurfSample
-    for (int i = 0; i < 16; i++){
+    // Sets TES Biases for SmurfSample
+    for (int i = 0; i < 16; i++){ // Is this always going to be 16?
         smurf_sample->setTESBias(i, sp->getHeader()->getTESBias(i));
     }
+
+    builder_->AsyncDatum(ts.time, smurf_sample);
 }
 
 void printSmurfPacket(SmurfPacketROPtr sp){

@@ -10,10 +10,10 @@ class SmurfTransmitter(pyrogue.Device):
     """
     Smurf Transmitter python wrapper
     """
-    def __init__(self, name, debug=False, **kwargs):
-        pyrogue.Device.__init__(self, name=name, description='SMuRF G3 Streamer', **kwargs)
+    def __init__(self, builder, name, debug=False, **kwargs):
+        pyrogue.Device.__init__(self, name=name, description='SMuRF Data CustomTransmitter', **kwargs)
 
-        self._transmitter = sosmurfcore.SmurfTransmitter(debug)
+        self._transmitter = sosmurfcore.SmurfTransmitter(builder, debug)
 
         # Add pyrogue variables here!!
         self.add(pyrogue.LocalVariable(

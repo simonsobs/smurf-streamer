@@ -9,9 +9,10 @@
 #include <G3TimeStamp.h>
 #include <G3Units.h>
 #include <G3NetworkSender.h>
+#include <G3EventBuilder.h>
+#include <G3Logging.h>
 
 #include "smurf/core/transmitters/BaseTransmitter.h"
-
 
 namespace bp = boost::python;
 namespace sct = smurf::core::transmitters;
@@ -30,9 +31,9 @@ void printSmurfPacket(SmurfPacketROPtr sp);
 class SmurfTransmitter : public sct::BaseTransmitter{
 public:
 
-    SmurfTransmitter();
+    SmurfTransmitter(G3EventBuilderPtr builder);
 
-    SmurfTransmitter(bool debug);
+    SmurfTransmitter(G3EventBuilderPtr builder, bool debug);
 
     void setDebug(bool debug){debug_ = debug;}
     bool getDebug(){return debug_;}
@@ -41,8 +42,8 @@ public:
         bp::class_< SmurfTransmitter,
                     std::shared_ptr<SmurfTransmitter>,
                     boost::noncopyable >
-                    ("SmurfTransmitter", bp::init<>())
-            .def(bp::init<bool>())
+                    ("SmurfTransmitter", bp::init<G3EventBuilderPtr>())
+            .def(bp::init<G3EventBuilderPtr, bool>())
             .def("setDebug",     &SmurfTransmitter::setDebug)
             .def("getDebug",     &SmurfTransmitter::getDebug)
             .def("setDisable",    &BaseTransmitter::setDisable)
@@ -57,7 +58,11 @@ private:
 
     bool debug_;
 
+    G3EventBuilderPtr builder_;
+
     void transmit(SmurfPacketROPtr packet);
+
+    SET_LOGGER("SmurfTransmitter")
 };
 
 typedef std::shared_ptr<SmurfTransmitter> SmurfTransmitterPtr;

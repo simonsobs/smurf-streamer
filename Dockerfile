@@ -19,22 +19,25 @@ RUN apt-get update && apt-get install -y \
 # Kind of a sketchy way to do this, but builds really quickly.
 COPY --from=simonsobs/spt3g:61a4c7b /app_lib/spt3g_software /usr/local/src/spt3g_software
 
-ENV SPT3G_SOFTWARE_PATH /usr/local/src/spt3g_software
-ENV SPT3G_SOFTWARE_BUILD_PATH /usr/local/src/spt3g_software/build
-ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
 
 #
 # RUN git clone https://github.com/CMB-S4/spt3g_software.git \
 #     && cd spt3g_software \
+#     && rm -rf dfmux coordinatutils doc gcp calibration\
 #     && mkdir -p build \
 #     && cd build \
 #     && cmake .. -DPYTHON_EXECUTABLE=`which python3` \
 #     && make
 
+ENV SPT3G_SOFTWARE_PATH /usr/local/src/spt3g_software
+ENV SPT3G_SOFTWARE_BUILD_PATH /usr/local/src/spt3g_software/build
+ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
+
 
 COPY . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build
-RUN cmake .. && make
+RUN cmake ..
+RUN make
 
 ENV PYTHONPATH /usr/local/src/smurf-streamer/lib:${PYTHONPATH}
 ENV PYTHONPATH /usr/local/src/smurf-streamer/python:${PYTHONPATH}

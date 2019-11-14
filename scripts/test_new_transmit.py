@@ -14,9 +14,8 @@ def main():
     args = parser.parse_args()
     pcie_kwargs, root_kwargs = sosmurf.util.process_args(args)
 
-    # streamer = sosmurf.SmurfStreamer("SmurfStreamer", config_file="config.txt")
-
-    transmitter = sosmurf.SmurfTransmitter("SOSmurfTransmitter", debug=True)
+    builder = sosmurf.SmurfBuilder()
+    transmitter = sosmurf.SmurfTransmitter(builder, name="SOSmurfTransmitter")
     root_kwargs['txDevice'] = transmitter
 
     if args.dev:
@@ -25,9 +24,8 @@ def main():
         from pysmurf.core.roots.CmbEth import CmbEth as RootManager
 
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        print("with PCIE", flush=True)
         with RootManager(**root_kwargs) as root:
-            print("With root", flush=True)
+            print("got pysmurf root", flush=True)
             if args.gui:
                 # Start the GUI
                 print("Starting GUI...\n", flush=True)
