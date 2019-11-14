@@ -37,6 +37,8 @@ ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
 COPY . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build
 RUN cmake ..
+
+
 RUN make
 
 ENV PYTHONPATH /usr/local/src/smurf-streamer/lib:${PYTHONPATH}
