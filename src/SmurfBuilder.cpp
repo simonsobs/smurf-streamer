@@ -1,8 +1,10 @@
 #include "SmurfBuilder.h"
 
 #include <G3Frame.h>
+#include <G3Data.h>
 
-SmurfBuilder::SmurfBuilder() : G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE) {}
+SmurfBuilder::SmurfBuilder() :
+    G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE), out_num_(0) {}
 SmurfBuilder::~SmurfBuilder(){}
 
 namespace bp = boost::python;
@@ -18,12 +20,12 @@ void SmurfBuilder::ProcessNewData(){
             queue_.front().second);
         queue_.pop_front();
     }
+
     // This should be pretty simple since we only have one data source and we can
     // assume packets are coming in order (hopefully?)
-
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Timepoint);
     frame->Put("Sample", pkt);
-
+    frame->Put("out_num", boost::make_shared<G3Int>(out_num_++));
     FrameOut(frame);
 }
 

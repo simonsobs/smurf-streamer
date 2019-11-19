@@ -1,10 +1,16 @@
+from spt3g import core
+
+
 import pysmurf.core.devices
 import pyrogue.gui
 import argparse
 import sosmurf
 import sys
-from spt3g import core
 import threading
+
+def dump(frames):
+    print(frames, flush=True)
+    return frames
 
 def run_gui(root, windows_title):
         app_top = pyrogue.gui.application(sys.argv)
@@ -20,6 +26,7 @@ def main():
     parser.add_argument('--dev', action='store_true',
         help = "If set, use DevBoardEth context manager instead of CmbEth"
     )
+    parser.add_argument('--stream-port', type=int, default=4536)
 
     args = parser.parse_args()
     pcie_kwargs, root_kwargs = sosmurf.util.process_args(args)
@@ -29,9 +36,10 @@ def main():
     root_kwargs['txDevice'] = transmitter
 
     pipe = core.G3Pipeline()
-    print(dir(pipe), flush=True)
     pipe.Add(builder)
-    pipe.Add(Dump)
+    pipe.Add(dump)
+    pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
+                                   max_queue_size=1000)
 
     if args.dev:
         from pysmurf.core.roots.DevBoardEth import DevBoardEth as RootManager
@@ -43,14 +51,10 @@ def main():
             print("got pysmurf root", flush=True)
             if args.gui:
                 print("Starting GUI...")
-                gui_thread = threading.Thread(target = run_gui,
-                                              args = (root, args.windows_title))
-                gui_thread.start()
+                run_gui(root, args.windows_title)
 
-            print("Starting G3_Pipeline")
-            pipe.Run(profile=True)
-            if args.gui:
-                gui_thread.join()
+            pipe.Run()
+            print("Closed G3 pipeline")
 
 if __name__ == '__main__':
     main()

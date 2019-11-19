@@ -28,6 +28,8 @@ private:
     };
 
     std::deque<struct oqueue_entry> oqueue_;
+
+    int64_t out_num_;
 };
 
 G3_POINTERS(SmurfBuilder);
