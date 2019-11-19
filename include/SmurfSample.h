@@ -11,14 +11,6 @@
 
 #include "smurf/core/common/SmurfPacket.h"
 
-class SmurfAggregatedSample : public G3FrameObject {
-public:
-    SmurfAggregatedSample() : G3FrameObject(), Timestamp(0) {}
-
-private:
-}
-
-
 class SmurfSample : public G3FrameObject{
 public:
     SmurfSample() : G3FrameObject(), Timestamp(0) {}

@@ -33,34 +33,47 @@ public:
 
     SmurfTransmitter(G3EventBuilderPtr builder);
 
-    SmurfTransmitter(G3EventBuilderPtr builder, bool debug);
+    SmurfTransmitter(G3EventBuilderPtr builder, bool debug_data, bool debug_meta);
 
-    void setDebug(bool debug){debug_ = debug;}
-    bool getDebug(){return debug_;}
+    ~SmurfTransmitter();
+
+    // Set/Get the debug flags
+    void       setDebugData(bool d) { debug_data_ = d;    };
+    void       setDebugMeta(bool d) { debug_meta_ = d;    };
+    const bool getDebugData()       { return debug_data_; };
+    const bool getDebugMeta()       { return debug_meta_; };
 
     static void setup_python(){
         bp::class_< SmurfTransmitter,
                     std::shared_ptr<SmurfTransmitter>,
                     boost::noncopyable >
                     ("SmurfTransmitter", bp::init<G3EventBuilderPtr>())
-            .def(bp::init<G3EventBuilderPtr, bool>())
-            .def("setDebug",     &SmurfTransmitter::setDebug)
-            .def("getDebug",     &SmurfTransmitter::getDebug)
-            .def("setDisable",    &BaseTransmitter::setDisable)
-            .def("getDisable",    &BaseTransmitter::getDisable)
-            .def("clearCnt",      &BaseTransmitter::clearCnt)
-            .def("getPktDropCnt", &BaseTransmitter::getPktDropCnt)
+            .def(bp::init<G3EventBuilderPtr, bool, bool>())
+
+            .def("setDisable",     &SmurfTransmitter::setDisable)
+            .def("getDisable",     &SmurfTransmitter::getDisable)
+            .def("setDebugData",   &SmurfTransmitter::setDebugData)
+            .def("getDebugData",   &SmurfTransmitter::getDebugData)
+            .def("setDebugMeta",   &SmurfTransmitter::setDebugMeta)
+            .def("getDebugMeta",   &SmurfTransmitter::getDebugMeta)
+            .def("clearCnt",       &SmurfTransmitter::clearCnt)
+            .def("getDataDropCnt", &SmurfTransmitter::getDataDropCnt)
+            .def("getMetaDropCnt", &SmurfTransmitter::getMetaDropCnt)
+            .def("getDataChannel", &SmurfTransmitter::getDataChannel)
+            .def("getMetaChannel", &SmurfTransmitter::getMetaChannel)
         ;
-        bp::implicitly_convertible<std::shared_ptr<SmurfTransmitter>, ris::SlavePtr>();
+        // bp::implicitly_convertible<std::shared_ptr<SmurfTransmitter>, ris::SlavePtr>();
     }
 
 private:
 
-    bool debug_;
+    bool debug_data_; // Debug flag, for data
+    bool debug_meta_; // Debug flag, for metadata
 
     G3EventBuilderPtr builder_;
 
-    void transmit(SmurfPacketROPtr packet);
+    void dataTransmit(SmurfPacketROPtr packet);
+    void metaTransmit(std::string cfg);
 
     SET_LOGGER("SmurfTransmitter")
 };

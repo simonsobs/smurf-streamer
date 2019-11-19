@@ -7,17 +7,31 @@ namespace sct = smurf::core::transmitters;
 //
 
 SmurfTransmitter::SmurfTransmitter(G3EventBuilderPtr builder) :
-    sct::BaseTransmitter(), builder_(builder), debug_(false){}
+    sct::BaseTransmitter(), builder_(builder),
+    debug_data_(false), debug_meta_(false){}
 
-SmurfTransmitter::SmurfTransmitter(G3EventBuilderPtr builder, bool debug) :
-    sct::BaseTransmitter(), builder_(builder), debug_(debug){
+SmurfTransmitter::SmurfTransmitter(G3EventBuilderPtr builder, bool debug_data, bool debug_meta) :
+    sct::BaseTransmitter(), builder_(builder),
+    debug_data_(debug_data), debug_meta_(debug_meta){
 
-    if (debug_)
+    if (debug_data_)
         log_info("Starting SmurfTransmitter in debug mode...");
 }
 
-void SmurfTransmitter::transmit(SmurfPacketROPtr sp){
-    if (debug_)
+SmurfTransmitter::~SmurfTransmitter(){}
+
+void SmurfTransmitter::metaTransmit(std::string cfg){
+    if (debug_meta_){
+        std::cout << "=====================================" << std::endl;
+        std::cout << "Metadata received" << std::endl;
+        std::cout << "=====================================" << std::endl;
+        std::cout << cfg << std::endl;
+        std::cout << "=====================================" << std::endl;
+    }
+}
+
+void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
+    if (debug_data_)
         printSmurfPacket(sp);
 
     // TODO: Get G3Time from smurf header...

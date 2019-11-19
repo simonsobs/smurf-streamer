@@ -61,15 +61,15 @@ def process_args(args):
         'config_file':     args.config_file,
         'epics_prefix':    args.epics,
         'polling_en':      (not args.nopoll),
-        'pcie_rssi_lane':  args.pcie_rssi_link,
+        # 'pcie_rssi_lane':  args.pcie_rssi_link,
         'stream_pv_size':  args.stream_size,
         'stream_pv_type':  args.stream_type,
         'pv_dump_file':    args.dump_pvs,
         'disable_bay0':    args.disable_bay0,
         'disable_bay1':    args.disable_bay1,
-        'disable_gc':      args.disable_gc,
-        'pcie_dev_rssi':   args.pcie_dev_rssi,
-        'pcie_dev_data':   args.pcie_dev_data,
+        # 'disable_gc':      args.disable_gc,
+        # 'pcie_dev_rssi':   args.pcie_dev_rssi,
+        # 'pcie_dev_data':   args.pcie_dev_data,
     }
 
     return pcie_kwargs, root_kwargs

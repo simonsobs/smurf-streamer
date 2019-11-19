@@ -32,12 +32,12 @@ def main():
     pcie_kwargs, root_kwargs = sosmurf.util.process_args(args)
 
     builder = sosmurf.SmurfBuilder()
-    transmitter = sosmurf.SmurfTransmitter(builder, name="SOSmurfTransmitter")
+    transmitter = sosmurf.SmurfTransmitter(builder, name="SOSmurfTransmitter", debug_meta=True)
     root_kwargs['txDevice'] = transmitter
 
     pipe = core.G3Pipeline()
     pipe.Add(builder)
-    pipe.Add(dump)
+    # pipe.Add(dump)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
 
