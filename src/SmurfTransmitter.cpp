@@ -39,9 +39,9 @@ void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
     size_t nchans = sp->getHeader()->getNumberChannels();
     SmurfSamplePtr smurf_sample(new SmurfSample(ts, nchans));
 
-    auto samples = smurf_sample->Samples();
+    auto channels = smurf_sample->Channels();
     for (int i = 0; i < nchans; i++){
-        samples[i] = sp->getData(i); // I think this returns a reference. Do we want to copy?
+        channels[i] = sp->getData(i); 
     }
 
     // Sets TES Biases for SmurfSample

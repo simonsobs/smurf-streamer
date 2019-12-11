@@ -9,7 +9,11 @@ import sys
 import threading
 
 def dump(frames):
+    print("HERE", flush=True)
     print(frames, flush=True)
+    if 'data' in frames.keys():
+        print(frames['data']['r0004'], flush=True)
+
     return frames
 
 def run_gui(root, windows_title):
@@ -32,12 +36,14 @@ def main():
     pcie_kwargs, root_kwargs = sosmurf.util.process_args(args)
 
     builder = sosmurf.SmurfBuilder()
-    transmitter = sosmurf.SmurfTransmitter(builder, name="SOSmurfTransmitter", debug_meta=True)
+    transmitter = sosmurf.SmurfTransmitter(
+        builder, name="SOSmurfTransmitter", debug_meta=False, debug_data=False
+    )
     root_kwargs['txDevice'] = transmitter
 
     pipe = core.G3Pipeline()
     pipe.Add(builder)
-    # pipe.Add(dump)
+    pipe.Add(dump)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
 
@@ -49,6 +55,7 @@ def main():
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
         with RootManager(**root_kwargs) as root:
             print("got pysmurf root", flush=True)
+            print("HERE!!", flush=True)
             if args.gui:
                 print("Starting GUI...")
                 run_gui(root, args.windows_title)

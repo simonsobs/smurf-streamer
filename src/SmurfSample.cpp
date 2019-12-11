@@ -5,22 +5,21 @@
 #include <cereal/types/map.hpp>
 #include <cereal/types/vector.hpp>
 
-
-SmurfSample::SmurfSample(G3Time time, size_t nsamples) :
+SmurfSample::SmurfSample(G3Time time, size_t nchannels) :
     G3FrameObject(),
-    samples(std::vector<SmurfPacketRO::data_t>(nsamples)),
+    channels(std::vector<SmurfPacketRO::data_t>(nchannels)),
     tes_biases(std::vector<uint32_t>(16)),
     Timestamp(time) {}
 
-SmurfPacketRO::data_t* SmurfSample::Samples() const {
-    return (SmurfPacketRO::data_t *) &samples[0];
+SmurfPacketRO::data_t* SmurfSample::Channels() const {
+    return (SmurfPacketRO::data_t *) &channels[0];
 }
 
 void SmurfSample::setTESBias(size_t n, uint32_t value){
     tes_biases[n] = value;
 }
 
-const int SmurfSample::NSamples() const {return samples.size();}
+const int SmurfSample::NChannels() const {return channels.size();}
 
 template <class A> void SmurfSample::serialize(A &ar, unsigned v){
     using namespace cereal;
@@ -28,7 +27,7 @@ template <class A> void SmurfSample::serialize(A &ar, unsigned v){
     G3_CHECK_VERSION(v);
 
     ar & make_nvp("G3FrameObject", base_class<G3FrameObject>(this));
-    ar & make_nvp("samples", samples);
+    ar & make_nvp("channels", channels);
     ar & make_nvp("tes_biases", tes_biases);
     ar & make_nvp("timestamp", Timestamp);
 }
@@ -41,9 +40,14 @@ void SmurfSample::setup_python(){
                 ("SmurfSample",
                 "Samples from all readout_channels and TES Biases comming from "
                 "a single SmurfPacket",
-                bp::init<G3Time, size_t>(bp::args("time", "nsamples")))
+                bp::init<G3Time, size_t>(bp::args("time", "nchannels")))
         .def_readwrite("Timestamp", &SmurfSample::Timestamp)
         .def_pickle(g3frameobject_picklesuite<SmurfSample>())
     ;
     register_pointer_conversions<SmurfSample>();
 }
+
+
+// void AggregatedSmurfSample(G3Time time, size_t nchans) :
+//     G3FrameObject()
+//     {}

@@ -21,15 +21,16 @@ protected:
     void ProcessNewData();
 
 private:
-    struct oqueue_entry {
-        G3FramePtr frame;
-        SmurfSamplePtr sample;
-        G3TimeStamp time;
-    };
 
-    std::deque<struct oqueue_entry> oqueue_;
+    std::deque<SmurfSampleConstPtr> stash_;
+    G3TimeStamp stash_start_time_;
+    G3TimeStamp agg_duration_; // Aggregation duration in G3Timestamp units (10 ns).
 
-    int64_t out_num_;
+    std::vector<std::string> chan_names_;
+
+    uint32_t out_num_;
+
+
 };
 
 G3_POINTERS(SmurfBuilder);
