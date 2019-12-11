@@ -5,23 +5,16 @@
 #include <G3Timestream.h>
 
 #include <chrono>
+#include <string>
 
 namespace bp = boost::python;
 
 SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE), out_num_(0),
-    agg_duration_(5*G3Units::sec)
-     {
-         char name[10];
-         for (int i = 0; i < 2000; i++){
-             sprintf(name, "r%04d", i);
-             chan_names_.push_back(name);
-         }
-     }
+    agg_duration_(5*G3Units::sec) {}
 
 
 SmurfBuilder::~SmurfBuilder(){}
-
 
 void SmurfBuilder::ProcessNewData(){
     SmurfSampleConstPtr pkt;
@@ -45,6 +38,15 @@ void SmurfBuilder::ProcessNewData(){
     // This code should run once every agg_duration_
     int nchans = stash_.front()->NChannels();
 
+    // Creates channel names
+    if (nchans > chan_names_.size()){
+        char name[10];
+        for (int i = chan_names_.size(); i < nchans; i++){
+            sprintf(name, "r%04d", i);
+            chan_names_.push_back(name);
+        }
+    }
+
     G3Timestream ts_base(stash_.size(), NAN);
     ts_base.start = stash_.front()->Timestamp;
     ts_base.stop = stash_.back()->Timestamp;
@@ -53,7 +55,7 @@ void SmurfBuilder::ProcessNewData(){
     G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
     for (int i = 0; i < nchans; i++){
         data_map->insert(std::make_pair(
-            chan_names_[i], G3TimestreamPtr(new G3Timestream(ts_base))
+            chan_names_[i].c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
         ));
     }
 

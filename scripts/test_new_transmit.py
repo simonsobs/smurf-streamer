@@ -8,13 +8,9 @@ import sosmurf
 import sys
 import threading
 
-def dump(frames):
-    print("HERE", flush=True)
-    print(frames, flush=True)
-    if 'data' in frames.keys():
-        print(frames['data']['r0004'], flush=True)
-
-    return frames
+# def dump(frames):
+#     print(frames, flush=True)
+#     return frames
 
 def run_gui(root, windows_title):
         app_top = pyrogue.gui.application(sys.argv)
@@ -43,7 +39,7 @@ def main():
 
     pipe = core.G3Pipeline()
     pipe.Add(builder)
-    pipe.Add(dump)
+    pipe.Add(core.Dump)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
 
