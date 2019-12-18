@@ -1,24 +1,11 @@
-version: '3.2'
+version: '3.7'
+
 services:
+    spt3g-pysmurf-server-base:
+        image: spt3g-pysmurf-server-base
+        build: ./docker/spt3g-pysmurf-server-base/
+
     smurf-streamer:
-        image: "smurf-streamer"
+        image: smurf-streamer
         build: .
-        container_name: smurf-streamer
-        network_mode: host
-        volumes:
-            - ${HOME}:${HOME}
-            - /data:/data
-            - ./fw:/tmp/fw/
-            - ./scripts/:/usr/local/src/smurf-streamer/scripts
-            - ./smurf.cfg:/usr/local/src/smurf-streamer/smurf.cfg
-            - ./config.txt:/usr/local/src/smurf-streamer/config.txt
-            - ./mask.txt:/usr/local/src/smurf-streamer/mask.txt
-        entrypoint: /usr/local/src/smurf-streamer/scripts/control-server/start_server.sh
-        command: >
-            -D -a 192.168.2.20 -e smurf_server -c eth-rssi-interleaved
-            -d /tmp/fw/config/defaults.yml -f Int16 -b 524288
-            --stream-config /usr/local/src/smurf-streamer/config.txt
-        # entrypoint: bash
-        # command: []
-        stdin_open: true
-        tty: true
+        depends_on: [spt3g-pysmurf-server-base]
