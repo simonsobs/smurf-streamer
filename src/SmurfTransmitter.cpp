@@ -41,7 +41,7 @@ void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
 
     auto channels = smurf_sample->Channels();
     for (int i = 0; i < nchans; i++){
-        channels[i] = sp->getData(i); 
+        channels[i] = sp->getData(i);
     }
 
     // Sets TES Biases for SmurfSample

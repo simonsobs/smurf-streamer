@@ -13,7 +13,6 @@ SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE), out_num_(0),
     agg_duration_(5*G3Units::sec) {}
 
-
 SmurfBuilder::~SmurfBuilder(){}
 
 void SmurfBuilder::ProcessNewData(){
@@ -59,6 +58,13 @@ void SmurfBuilder::ProcessNewData(){
         ));
     }
 
+    G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
+    for (int i = 0; i < 16; i++){
+        tes_bias_map->insert(std::make_pair(
+            std::to_string(i).c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
+        ));
+    }
+
     // Insert sample data into timestreams
     int sample = 0;
     for (auto x = stash_.begin(); x != stash_.end(); x++, sample++){
@@ -66,20 +72,21 @@ void SmurfBuilder::ProcessNewData(){
         for (int i = 0; i < nchans; i++){
             (*((*data_map)[chan_names_[i]]))[sample] = chan_data[i];
         }
+
+        for (int i = 0; i < 16; i++){
+            std::string tes_name = std::to_string(i);
+            (*((*tes_bias_map)[tes_name]))[sample] = (*x)->getTESBias(i);
+        }
     }
 
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
     frame->Put("frame_num", boost::make_shared<G3Int>(out_num_++));
     frame->Put("data", data_map);
+    frame->Put("tes_biases", tes_bias_map);
     frame->Put("num_samples", boost::make_shared<G3Int>(sample));
 
     stash_.clear();
 
-    // // This should be pretty simple since we only have one data source and we can
-    // // assume packets are coming in order (hopefully?)
-    // G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Timepoint);
-    // frame->Put("Sample", pkt);
-    // frame->Put("out_num", boost::make_shared<G3Int>(out_num_++));
     FrameOut(frame);
 }
 

@@ -19,6 +19,10 @@ void SmurfSample::setTESBias(size_t n, uint32_t value){
     tes_biases[n] = value;
 }
 
+uint32_t SmurfSample::getTESBias(size_t n) const{
+    return tes_biases[n];
+}
+
 const int SmurfSample::NChannels() const {return channels.size();}
 
 template <class A> void SmurfSample::serialize(A &ar, unsigned v){
