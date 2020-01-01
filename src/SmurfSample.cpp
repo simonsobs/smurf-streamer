@@ -36,6 +36,9 @@ template <class A> void SmurfSample::serialize(A &ar, unsigned v){
     ar & make_nvp("timestamp", Timestamp);
 }
 
+void StatusSample::setup_python(){
+}
+
 void SmurfSample::setup_python(){
     namespace bp = boost::python;
 
