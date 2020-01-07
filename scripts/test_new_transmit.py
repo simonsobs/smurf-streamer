@@ -1,6 +1,5 @@
 from spt3g import core
 
-
 import pysmurf.core.devices
 import pyrogue.gui
 import argparse
@@ -8,17 +7,6 @@ import sosmurf
 import sys
 import threading
 
-# def dump(frames):
-#     print(frames, flush=True)
-#     return frames
-
-def run_gui(root, windows_title):
-        app_top = pyrogue.gui.application(sys.argv)
-        gui_top = pyrogue.gui.GuiTop(incGroups=None,excGroups=None)
-        gui_top.setWindowTitle(windows_title)
-        gui_top.addTree(root)
-        gui_top.resize(800,1000)
-        app_top.exec_()
 
 def main():
     parser = sosmurf.util.make_smurf_parser()
@@ -54,10 +42,17 @@ def main():
             print("HERE!!", flush=True)
             if args.gui:
                 print("Starting GUI...")
-                run_gui(root, args.windows_title)
+                app_top = pyrogue.gui.application(sys.argv)
+                gui_top = pyrogue.gui.GuiTop(incGroups=None,excGroups=None)
+                gui_top.setWindowTitle(args.windows_title)
+                gui_top.addTree(root)
+                gui_top.resize(800,1000)
+                app_top.exec_()
 
-            pipe.Run()
-            print("Closed G3 pipeline")
+            else:
+                print("Starting G3Pipeline", flush=True)
+                pipe.Run(profile=False)
+                print("Closed G3 pipeline")
 
 if __name__ == '__main__':
     main()

@@ -11,6 +11,21 @@
 
 #include "smurf/core/common/SmurfPacket.h"
 
+class StatusSample : public G3FrameObject{
+public:
+    StatusSample(): G3FrameObject(), Timestamp(0) {}
+    StatusSample(G3Time time, std::string status) :
+        G3FrameObject(), Timestamp(time), status_(status){}
+
+    std::string status_;
+
+    static void setup_python();
+
+    G3Time Timestamp;
+};
+
+G3_POINTERS(StatusSample);
+
 class SmurfSample : public G3FrameObject{
 public:
     SmurfSample() : G3FrameObject(), Timestamp(0) {}

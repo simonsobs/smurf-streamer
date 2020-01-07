@@ -1,6 +1,7 @@
 #include "SmurfTransmitter.h"
 #include "SmurfSample.h"
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 
 namespace sct = smurf::core::transmitters;
 
@@ -28,6 +29,10 @@ void SmurfTransmitter::metaTransmit(std::string cfg){
         std::cout << cfg << std::endl;
         std::cout << "=====================================" << std::endl;
     }
+
+    G3Time ts = G3Time::Now();
+    StatusSamplePtr status_sample(new StatusSample(ts, cfg));
+    builder_->AsyncDatum(ts.time, status_sample);
 }
 
 void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
