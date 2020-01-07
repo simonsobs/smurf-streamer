@@ -14,11 +14,10 @@
 class StatusSample : public G3FrameObject{
 public:
     StatusSample(): G3FrameObject(), Timestamp(0) {}
-    StatusSample(G3Time time,
-                std::map<std::string, std::string> status_map) :
-        G3FrameObject(), Timestamp(time), status_map_(status_map){}
+    StatusSample(G3Time time, std::string status) :
+        G3FrameObject(), Timestamp(time), status_(status){}
 
-    const std::map<std::string, std::string> status_map_;
+    std::string status_;
 
     static void setup_python();
 

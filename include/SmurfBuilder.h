@@ -27,10 +27,10 @@ protected:
 private:
     // Deques containing data sample pointers.
     std::deque<SmurfSampleConstPtr> write_stash_, read_stash_;
+    std::mutex write_stash_lock_, read_stash_lock_;
 
     uint16_t num_channels_;
 
-    std::mutex write_stash_lock_, read_stash_lock_;
 
     // Puts all stashed data in G3Frame and sends it out.
     void FlushReadStash();
@@ -38,8 +38,6 @@ private:
 
     // Calls FlushStash every agg_duration_ seconds
     static void ProcessStashThread(SmurfBuilder *);
-
-    G3FramePtr CreateStatusFrame(StatusSampleConstPtr, G3TimeStamp);
 
     bool running_;
 

@@ -101,21 +101,6 @@ void SmurfBuilder::FlushReadStash(){
     FrameOut(frame);
 }
 
-G3FramePtr SmurfBuilder::CreateStatusFrame(StatusSampleConstPtr status_pkt, G3TimeStamp ts){
-    G3FramePtr frame(boost::make_shared<G3Frame>(G3Frame::Observation));
-
-    frame->Put("frame_num", boost::make_shared<G3Int>(out_num_++));
-
-    G3MapStringPtr status_map(new G3MapString);
-    auto it = status_pkt->status_map_.begin();
-    while (it != status_pkt->status_map_.end()){
-        status_map->insert(*it);
-        it++;
-    }
-    frame->Put("status_map", status_map);
-    return frame;
-}
-
 void SmurfBuilder::ProcessNewData(){
     G3FrameObjectConstPtr pkt;
     G3TimeStamp ts;
@@ -131,8 +116,11 @@ void SmurfBuilder::ProcessNewData(){
     StatusSampleConstPtr status_pkt;
 
     if (status_pkt = boost::dynamic_pointer_cast<const StatusSample>(pkt)){
-        printf("Status received!\n");
-        G3FramePtr frame = CreateStatusFrame(status_pkt, ts);
+
+        G3FramePtr frame(boost::make_shared<G3Frame>(G3Frame::Observation));
+        frame->Put("frame_num", boost::make_shared<G3Int>(out_num_++));
+        frame->Put("status", boost::make_shared<G3String>(status_pkt->status_));
+
         FrameOut(frame);
     }
     else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){

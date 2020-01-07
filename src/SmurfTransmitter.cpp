@@ -31,26 +31,7 @@ void SmurfTransmitter::metaTransmit(std::string cfg){
     }
 
     G3Time ts = G3Time::Now();
-
-    std::stringstream ss(cfg);
-    std::string line, key, val;
-
-    std::map<std::string, std::string> cfg_map;
-
-    while (std::getline(ss, line)){
-        size_t found = line.find(':');
-
-        key = line.substr(0, found);
-        val = line.substr(found+1);
-        boost::trim(key);
-        boost::trim(val);
-
-        cfg_map.insert(std::pair<std::string, std::string>(
-            key, val
-        ));
-    }
-
-    StatusSamplePtr status_sample(new StatusSample(ts, cfg_map));
+    StatusSamplePtr status_sample(new StatusSample(ts, cfg));
     builder_->AsyncDatum(ts.time, status_sample);
 }
 
