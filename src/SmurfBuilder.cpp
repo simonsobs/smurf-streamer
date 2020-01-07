@@ -13,7 +13,7 @@ namespace bp = boost::python;
 
 SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE),
-    out_num_(0),
+    out_num_(0), num_channels_(0),
     agg_duration_(3)
 {
     process_stash_thread_ = std::thread(ProcessStashThread, this);
@@ -30,21 +30,22 @@ void SmurfBuilder::ProcessStashThread(SmurfBuilder *builder){
         std::this_thread::sleep_for(
             std::chrono::milliseconds(int(1000 * builder->agg_duration_))
         );
-        builder->FlushStash();
+        builder->SwapStash();
+        builder->FlushReadStash();
     }
 }
 
-void SmurfBuilder::FlushStash(){
+void SmurfBuilder::SwapStash(){
+    std::lock_guard<std::mutex> read_lock(read_stash_lock_);
+    std::lock_guard<std::mutex> write_lock(write_stash_lock_);
+    write_stash_.swap(read_stash_);
+}
+
+void SmurfBuilder::FlushReadStash(){
     std::lock_guard<std::mutex> read_lock(read_stash_lock_);
 
-    {
-        std::lock_guard<std::mutex> lock(stash_lock_);
-        if (stash_.empty()){
-            return;
-        }
-
-        stash_.swap(read_stash_);
-    }
+    if (read_stash_.empty())
+        return;
 
     int nchans = read_stash_.front()->NChannels();
 
@@ -130,19 +131,23 @@ void SmurfBuilder::ProcessNewData(){
     StatusSampleConstPtr status_pkt;
 
     if (status_pkt = boost::dynamic_pointer_cast<const StatusSample>(pkt)){
+        printf("Status received!\n");
         G3FramePtr frame = CreateStatusFrame(status_pkt, ts);
         FrameOut(frame);
     }
     else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
-        if (data_pkt->NChannels() != stash_.front()->NChannels()){
-            FlushStash();
+
+        if (num_channels_ == 0){
+            num_channels_ = data_pkt->NChannels();
+        }
+        else if (data_pkt->NChannels() != num_channels_){
+            SwapStash();
+            FlushReadStash();
+            num_channels_ = data_pkt->NChannels();
         }
 
-        std::lock_guard<std::mutex> lock(stash_lock_);
-        if (stash_.empty())
-            stash_start_time_ = data_pkt->Timestamp;
-
-        stash_.push_back(data_pkt);
+        std::lock_guard<std::mutex> lock(write_stash_lock_);
+        write_stash_.push_back(data_pkt);
     }
 }
 

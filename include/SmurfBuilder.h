@@ -9,7 +9,8 @@
 
 #include "SmurfSample.h"
 
-#define MAX_DATASOURCE_QUEUE_SIZE 1000
+#define MAX_DATASOURCE_QUEUE_SIZE 3000
+
 //
 class SmurfBuilder : public G3EventBuilder{
 public:
@@ -25,14 +26,15 @@ protected:
 
 private:
     // Deques containing data sample pointers.
-    std::deque<SmurfSampleConstPtr> stash_, read_stash_;
+    std::deque<SmurfSampleConstPtr> write_stash_, read_stash_;
 
-    std::mutex stash_lock_, read_stash_lock_;
+    uint16_t num_channels_;
 
-    G3TimeStamp stash_start_time_;
+    std::mutex write_stash_lock_, read_stash_lock_;
 
     // Puts all stashed data in G3Frame and sends it out.
-    void FlushStash();
+    void FlushReadStash();
+    void SwapStash();
 
     // Calls FlushStash every agg_duration_ seconds
     static void ProcessStashThread(SmurfBuilder *);
