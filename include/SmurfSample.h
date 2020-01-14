@@ -8,8 +8,9 @@
 #include <pybindings.h>
 #include <serialization.h>
 
-
 #include "smurf/core/common/SmurfPacket.h"
+
+#define N_TES_BIAS 16
 
 class StatusSample : public G3FrameObject{
 public:

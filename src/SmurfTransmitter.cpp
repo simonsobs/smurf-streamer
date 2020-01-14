@@ -28,6 +28,7 @@ void SmurfTransmitter::metaTransmit(std::string cfg){
         std::cout << "=====================================" << std::endl;
         std::cout << cfg << std::endl;
         std::cout << "=====================================" << std::endl;
+        std::cout.flush();
     }
 
     G3Time ts = G3Time::Now();
@@ -50,7 +51,7 @@ void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
     }
 
     // Sets TES Biases for SmurfSample
-    for (int i = 0; i < 16; i++){ // Is this always going to be 16?
+    for (int i = 0; i < N_TES_BIAS; i++){ // Is this always going to be 16?
         smurf_sample->setTESBias(i, sp->getHeader()->getTESBias(i));
     }
 
@@ -75,7 +76,7 @@ void printSmurfPacket(SmurfPacketROPtr sp){
     std::cout << "Unix time          = " << unsigned(sp->getHeader()->getUnixTime()) << std::endl;
     std::cout << "Frame counter      = " << unsigned(sp->getHeader()->getFrameCounter()) << std::endl;
     std::cout << "TES Bias values:" << std::endl;
-    for (std::size_t i{0}; i < 16; ++i)
+    for (std::size_t i{0}; i < N_TES_BIAS; ++i)
         std::cout << sp->getHeader()->getTESBias(i) << ", ";
     std::cout << std::endl;
 

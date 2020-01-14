@@ -44,8 +44,13 @@ void SmurfBuilder::SwapStash(){
 void SmurfBuilder::FlushReadStash(){
     std::lock_guard<std::mutex> read_lock(read_stash_lock_);
 
-    if (read_stash_.empty())
+    if (read_stash_.empty()){
+        G3FramePtr frame = boost::make_shared<G3Frame>();
+        frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(0));
+        FrameOut(frame);
         return;
+    }
+
 
     int nchans = read_stash_.front()->NChannels();
 
@@ -70,7 +75,7 @@ void SmurfBuilder::FlushReadStash(){
         ));
     }
     G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
-    for (int i = 0; i < 16; i++){
+    for (int i = 0; i < N_TES_BIAS; i++){
         tes_bias_map->insert(std::make_pair(
             std::to_string(i).c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
         ));

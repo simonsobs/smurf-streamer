@@ -19,7 +19,7 @@ public:
 
     static void setup_python();
 
-    float agg_duration_; // Aggregation duration in G3Timestamp units (10 ns).
+    float agg_duration_; // Aggregation duration in seconds
 
 protected:
     void ProcessNewData();

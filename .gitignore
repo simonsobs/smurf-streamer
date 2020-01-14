@@ -10,7 +10,7 @@ fw/pyrogue
 
 ._docker-compose.yml
 
-fw/pyrogue
+fw
 .ipynb_checkpoints/
 *.ipynb
 *.swp

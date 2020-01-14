@@ -1,12 +1,12 @@
 from spt3g import core
 
-import pysmurf.core.devices
+
 import pyrogue.gui
 import argparse
 import sosmurf
 import sys
 import threading
-
+import pysmurf.core.devices
 
 def main():
     parser = sosmurf.util.make_smurf_parser()
@@ -50,6 +50,7 @@ def main():
                 app_top.exec_()
 
             else:
+                # pyrogue.waitCntrlC()
                 print("Starting G3Pipeline", flush=True)
                 pipe.Run(profile=False)
                 print("Closed G3 pipeline")
