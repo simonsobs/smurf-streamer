@@ -8,6 +8,7 @@ import sys
 import threading
 import pysmurf.core.devices
 
+
 def main():
     parser = sosmurf.util.make_smurf_parser()
 
@@ -31,13 +32,11 @@ def main():
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
 
-    if args.dev:
-        from pysmurf.core.roots.DevBoardEth import DevBoardEth as RootManager
-    else:
-        from pysmurf.core.roots.CmbEth import CmbEth as RootManager
+    from pysmurf.core.roots.DevBoardEth import DevBoardEth
+
 
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        with RootManager(**root_kwargs) as root:
+        with DevBoardEth(**root_kwargs) as root:
             print("got pysmurf root", flush=True)
             print("HERE!!", flush=True)
             if args.gui:
