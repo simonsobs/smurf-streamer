@@ -28,12 +28,12 @@ def main():
 
     pipe = core.G3Pipeline()
     pipe.Add(builder)
+    pipe.Add(sosmurf.SessionManager.SessionManager)
     pipe.Add(core.Dump)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
 
     from pysmurf.core.roots.DevBoardEth import DevBoardEth
-
 
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
         with DevBoardEth(**root_kwargs) as root:
