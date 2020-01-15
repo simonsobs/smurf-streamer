@@ -8,6 +8,7 @@ class SessionManager:
     def __init__(self):
         self.session_id = None
         self.end_session = False
+        self.frame_num = 0
         self.status = {}
 
     def flowcontrol_frame(self, start):
@@ -21,6 +22,8 @@ class SessionManager:
         frame['sostream_flowcontrol'] = (1 if start else 2)
         frame['session_id'] = self.session_id
         frame['time'] = core.G3Time.Now()
+        frame['frame_num'] = self.frame_num
+        self.frame_num += 1
         return frame
 
     def __call__(self, frame):
@@ -33,10 +36,13 @@ class SessionManager:
                 out.insert(0, self.flowcontrol_frame(start=False))
                 self.session_id = None
                 self.end_session = False
+                self.frame_num = 0
             return out
 
         if self.session_id is not None:
             frame['session_id'] = self.session_id
+            frame['frame_num'] = self.frame_num
+            self.frame_num += 1
 
         # If its a data frame, start a new session if one is not active
         # and insert fc frame
@@ -44,6 +50,11 @@ class SessionManager:
             if self.session_id is None:
                 self.session_id = time.time()
                 out.insert(0, self.flowcontrol_frame(start=True))
+
+                frame['session_id'] = self.session_id
+                frame['frame_num'] = self.frame_num
+                self.frame_num += 1
+
             return out
 
         # If status frame, update status dict, check to see if enableStreams has

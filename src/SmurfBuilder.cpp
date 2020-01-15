@@ -96,7 +96,6 @@ void SmurfBuilder::FlushReadStash(){
     }
 
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
-    frame->Put("frame_num", boost::make_shared<G3Int>(out_num_++));
     frame->Put("data", data_map);
     frame->Put("tes_biases", tes_bias_map);
     frame->Put("num_samples", boost::make_shared<G3Int>(sample));
@@ -123,7 +122,6 @@ void SmurfBuilder::ProcessNewData(){
     if (status_pkt = boost::dynamic_pointer_cast<const StatusSample>(pkt)){
 
         G3FramePtr frame(boost::make_shared<G3Frame>(G3Frame::Wiring));
-        frame->Put("frame_num", boost::make_shared<G3Int>(out_num_++));
         frame->Put("status", boost::make_shared<G3String>(status_pkt->status_));
 
         FrameOut(frame);

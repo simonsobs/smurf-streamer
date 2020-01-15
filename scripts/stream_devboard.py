@@ -38,7 +38,6 @@ def main():
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
         with DevBoardEth(**root_kwargs) as root:
             print("got pysmurf root", flush=True)
-            print("HERE!!", flush=True)
             if args.gui:
                 print("Starting GUI...")
                 app_top = pyrogue.gui.application(sys.argv)
