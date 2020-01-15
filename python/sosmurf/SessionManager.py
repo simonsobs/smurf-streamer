@@ -5,7 +5,8 @@ import time
 class SessionManager:
     enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.StreamControl.EnableStreams"
 
-    def __init__(self):
+    def __init__(self, stream_id=None):
+        self.stream_id = stream_id
         self.session_id = None
         self.end_session = False
         self.frame_num = 0
@@ -20,6 +21,9 @@ class SessionManager:
         """
         frame = core.G3Frame(core.G3FrameType.Observation)
         frame['sostream_flowcontrol'] = (1 if start else 2)
+        if self.stream_id is not None:
+            frame['sostream_id'] = self.stream_id
+
         frame['session_id'] = self.session_id
         frame['time'] = core.G3Time.Now()
         frame['frame_num'] = self.frame_num
@@ -32,6 +36,8 @@ class SessionManager:
         # If end_session is flagged, send end frame once an idle frame has
         # been received
         if frame.type == core.G3FrameType.none:
+            if self.stream_id is not None:
+                frame['sostream_id'] = self.stream_id
             if self.end_session:
                 out.insert(0, self.flowcontrol_frame(start=False))
                 self.session_id = None

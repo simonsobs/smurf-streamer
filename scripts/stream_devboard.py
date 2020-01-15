@@ -12,10 +12,8 @@ import pysmurf.core.devices
 def main():
     parser = sosmurf.util.make_smurf_parser()
 
-    parser.add_argument('--dev', action='store_true',
-        help = "If set, use DevBoardEth context manager instead of CmbEth"
-    )
     parser.add_argument('--stream-port', type=int, default=4536)
+    parser.add_argument('--stream-id', type=str)
 
     args = parser.parse_args()
     pcie_kwargs, root_kwargs = sosmurf.util.process_args(args)
@@ -28,7 +26,7 @@ def main():
 
     pipe = core.G3Pipeline()
     pipe.Add(builder)
-    pipe.Add(sosmurf.SessionManager.SessionManager)
+    pipe.Add(sosmurf.SessionManager.SessionManager, stream_id = args.stream_id)
     pipe.Add(core.Dump)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
