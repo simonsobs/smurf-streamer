@@ -47,6 +47,7 @@ void SmurfBuilder::FlushReadStash(){
     if (read_stash_.empty()){
         G3FramePtr frame = boost::make_shared<G3Frame>();
         frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(0));
+        frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
         FrameOut(frame);
         return;
     }
@@ -96,6 +97,7 @@ void SmurfBuilder::FlushReadStash(){
     }
 
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
+    frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
     frame->Put("data", data_map);
     frame->Put("tes_biases", tes_bias_map);
     frame->Put("num_samples", boost::make_shared<G3Int>(sample));
@@ -122,6 +124,7 @@ void SmurfBuilder::ProcessNewData(){
     if (status_pkt = boost::dynamic_pointer_cast<const StatusSample>(pkt)){
 
         G3FramePtr frame(boost::make_shared<G3Frame>(G3Frame::Wiring));
+        frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
         frame->Put("status", boost::make_shared<G3String>(status_pkt->status_));
 
         FrameOut(frame);
