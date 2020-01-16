@@ -8,6 +8,8 @@
 #include <chrono>
 #include <string>
 #include <thread>
+#include <inttypes.h>
+
 
 namespace bp = boost::python;
 
@@ -52,7 +54,6 @@ void SmurfBuilder::FlushReadStash(){
         return;
     }
 
-
     int nchans = read_stash_.front()->NChannels();
 
     // Creates channel names
@@ -65,8 +66,12 @@ void SmurfBuilder::FlushReadStash(){
     }
 
     G3Timestream ts_base(read_stash_.size(), NAN);
-    ts_base.start = read_stash_.front()->Timestamp;
-    ts_base.stop = read_stash_.back()->Timestamp;
+    ts_base.start = read_stash_.front()->time_;
+    ts_base.stop = read_stash_.back()->time_;
+
+    TimestampType timing_type = read_stash_.front()->timing_type_;
+
+    printf("Start time: %" PRId64 "\n", ts_base.start.time);
 
     // Initialize timestream map
     G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
@@ -98,6 +103,9 @@ void SmurfBuilder::FlushReadStash(){
 
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
     frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
+    frame->Put("timing_paradigm",
+               boost::make_shared<G3String>(TimestampTypeStrings[timing_type])
+    );
     frame->Put("data", data_map);
     frame->Put("tes_biases", tes_bias_map);
     frame->Put("num_samples", boost::make_shared<G3Int>(sample));

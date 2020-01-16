@@ -12,6 +12,8 @@
 
 #define N_TES_BIAS 16
 
+
+
 class StatusSample : public G3FrameObject{
 public:
     StatusSample(): G3FrameObject(), Timestamp(0) {}
@@ -27,10 +29,14 @@ public:
 
 G3_POINTERS(StatusSample);
 
+enum TimestampType {Timing_LowPrecision, Timing_HighPrecision};
+static const char * TimestampTypeStrings[] = {"Low Precision", "High Precision"};
+
 class SmurfSample : public G3FrameObject{
 public:
-    SmurfSample() : G3FrameObject(), Timestamp(0) {}
-    SmurfSample(G3Time time, size_t nchannels);
+
+    SmurfSample() : G3FrameObject(), time_(0), timing_type_(Timing_LowPrecision) {}
+    SmurfSample(G3Time time, size_t nchannels, TimestampType timing_type);
 
     SmurfPacketRO::data_t *Channels() const;
 
@@ -40,7 +46,8 @@ public:
 
     const int NChannels() const;
 
-    G3Time Timestamp;
+    G3Time time_;
+    TimestampType timing_type_;
 
     template <class A> void serialize(A &ar, unsigned v);
 
@@ -53,6 +60,6 @@ private:
 
 G3_POINTERS(SmurfSample);
 // MAKE SURE TO BUMP THIS IF ANYTHING CHANGES IN THE DATA INTERFACE
-G3_SERIALIZABLE(SmurfSample, 1);
+G3_SERIALIZABLE(SmurfSample, 2);
 
 #endif

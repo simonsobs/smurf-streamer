@@ -2,6 +2,7 @@
 #include "SmurfSample.h"
 #include <iostream>
 #include <boost/algorithm/string.hpp>
+#include <inttypes.h>
 
 namespace sct = smurf::core::transmitters;
 
@@ -40,10 +41,12 @@ void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
     if (debug_data_)
         printSmurfPacket(sp);
 
-    // TODO: Get G3Time from smurf header...
+    //TODO: Get high precision timing
     G3Time ts = G3Time::Now();
+    TimestampType timing_type = Timing_LowPrecision;
+
     size_t nchans = sp->getHeader()->getNumberChannels();
-    SmurfSamplePtr smurf_sample(new SmurfSample(ts, nchans));
+    SmurfSamplePtr smurf_sample(new SmurfSample(ts, nchans, timing_type));
 
     auto channels = smurf_sample->Channels();
     for (int i = 0; i < nchans; i++){
