@@ -1,4 +1,4 @@
-FROM tidair/pysmurf-server-base:v4.0.0-rc12
+FROM tidair/pysmurf-server-base:v4.0.0-rc15
 
 # Installs spt3g to /usr/local/src/
 WORKDIR /usr/local/src/
@@ -16,8 +16,10 @@ RUN apt-get update && apt-get install -y \
     gdb \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/CMB-S4/spt3g_software.git \
-    && cd spt3g_software \
+COPY spt3g_software spt3g_software
+
+# RUN git clone https://github.com/CMB-S4/spt3g_software.git \
+RUN cd spt3g_software \
     && mkdir -p build \
     && cd build \
     && cmake .. -DPYTHON_EXECUTABLE=`which python3` \

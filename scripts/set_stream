@@ -1,0 +1,5 @@
+#!/bin/bash
+
+stream_enable_pv="smurf-devboard:AMCc:FpgaTopLevel:AppTop:AppCore:StreamControl:EnableStreams"
+
+caput $stream_enable_pv $1
