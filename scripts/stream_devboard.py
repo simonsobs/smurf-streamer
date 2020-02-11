@@ -1,23 +1,26 @@
 from spt3g import core
 
-
 import pyrogue.gui
-import argparse
-import sosmurf
-import sys
-import threading
 import pysmurf.core.devices
 import pysmurf.core.server_scripts.Common as pysmurf_common
+
+import argparse
+import shlex
+import sosmurf
+import sys
 
 
 def main():
     parser = pysmurf_common.make_parser()
 
+    modified_args = sosmurf.util.setup_server()
+
     parser.add_argument('--stream-port', type=int, default=4536)
     parser.add_argument('--stream-id', type=str)
 
-    args = parser.parse_args()
+    args = parser.parse_args(shlex.split(modified_args))
     pysmurf_common.process_args(args)
+
     from pysmurf.core.roots.DevBoardEth import DevBoardEth
 
     if args.ip_addr is None:
@@ -30,7 +33,7 @@ def main():
 
     pipe = core.G3Pipeline()
     pipe.Add(builder)
-    pipe.Add(sosmurf.SessionManager.SessionManager, stream_id = args.stream_id)
+    pipe.Add(sosmurf.SessionManager.SessionManager, stream_id=args.stream_id)
     pipe.Add(core.Dump)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
