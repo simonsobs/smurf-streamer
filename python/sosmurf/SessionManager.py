@@ -51,7 +51,7 @@ class SessionManager:
             self.frame_num += 1
 
         # If its a data frame, start a new session if one is not active
-        # and insert fc frame
+        # and insert fc frame before data.
         if frame.type == core.G3FrameType.Scan:
             if self.session_id is None:
                 self.session_id = time.time()
@@ -66,17 +66,27 @@ class SessionManager:
         # If status frame, update status dict, check to see if enableStreams has
         # changed and act accordingly
         if frame.type == core.G3FrameType.Wiring:
+
+            # Updates status each wiring frame
             self.status.update(yaml.safe_load(frame['status']))
             enable = self.status.get(self.enable_streams)
 
-            if enable is None:
-                return out
+            # When no session is active, if enable is specified start a session,
+            # and if its not don't transmit frame.
+            if self.session_id is None:
+                if enable:
+                    self.session_id = time.time()
+                    out.append(self.flowcontrol_frame(True))
+                else:
+                    return []
 
-            if enable and (self.session_id is None):
-                self.session_id = time.time()
-                out.append(self.flowcontrol_frame(True))
-
-            if not enable and (self.session_id is not None):
-                self.end_session = True
-
-            return out
+            # If a session is active:
+            #   - If enable is not specified, pass frame through
+            #   - If enable is false, flag end of session. An end session frame
+            #     will be sent the next time an idle frame is received. 
+            else:  
+                if enable is None:
+                    return out
+                elif not enable:
+                    self.end_session = True
+                    return out
