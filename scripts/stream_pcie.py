@@ -5,6 +5,7 @@ import argparse
 import sosmurf
 import sys
 import threading
+
 import pysmurf.core.server_scripts.Common as pysmurf_common
 
 def main():
@@ -19,7 +20,7 @@ def main():
     from pysmurf.core.roots.CmbPcie import CmbPcie
 
     if args.ip_addr: 
-        common.verify_ip(args)
+        pysmurf_common.verify_ip(args)
 
 
 

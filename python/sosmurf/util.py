@@ -59,16 +59,16 @@ def get_kwargs(args, dev_type, **extra_kwargs):
 
     elif dev_type=="cmb_pcie":
          kwargs = {   
-            config_file    = args['config_file'],
-            epics_prefix   = args['epics_prefix'],
-            polling_en     = args['polling_en'],
-            pv_dump_file   = args['pv_dump_file'],
-            disable_bay0   = args['disable_bay0'],
-            disable_bay1   = args['disable_bay1'],
-            pcie_rssi_lane = args['pcie_rssi_lane'],
-            pcie_dev_rssi  = args['pcie_dev_rssi'],
-            pcie_dev_data  = args['pcie_dev_data'],
-            configure      = args['configure'],
+            'config_file'   :  args.config_file,
+            'epics_prefix'  :  args.epics_prefix,
+            'polling_en'    :  args.polling_en,
+            'pv_dump_file'  :  args.pv_dump_file,
+            'disable_bay0'  :  args.disable_bay0,
+            'disable_bay1'  :  args.disable_bay1,
+            'pcie_rssi_lane':  args.pcie_rssi_lane,
+            'pcie_dev_rssi' :  args.pcie_dev_rssi,
+            'pcie_dev_data' :  args.pcie_dev_data,
+            'configure'     :  args.configure,
         }
 
     elif dev_type in ['cmb_eth', 'dev_board_eth']:
