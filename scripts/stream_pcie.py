@@ -5,6 +5,7 @@ import argparse
 import sosmurf
 import sys
 import threading
+import shlex 
 
 import pysmurf.core.server_scripts.Common as pysmurf_common
 
@@ -14,7 +15,9 @@ def main():
     parser.add_argument('--stream-port', type=int, default=4536)
     parser.add_argument('--stream-id', type=str)
 
-    args = parser.parse_args()
+    modified_args = sosmurf.util.setup_server()
+
+    args = parser.parse_args(shlex.split(modified_args))
     pysmurf_common.process_args(args)
 
     from pysmurf.core.roots.CmbPcie import CmbPcie
