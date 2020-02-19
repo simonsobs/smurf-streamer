@@ -3,7 +3,8 @@ import yaml
 import time
 
 class SessionManager:
-    enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.StreamControl.EnableStreams"
+    #enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.StreamControl.EnableStreams"
+    enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.enableStreaming"
 
     def __init__(self, stream_id=None):
         self.stream_id = stream_id
