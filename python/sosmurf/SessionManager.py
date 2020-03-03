@@ -9,7 +9,7 @@ class SessionManager:
     def __init__(self, stream_id=None):
         self.stream_id = stream_id
         self.session_id = None
-        self.end_session = False
+        self.end_session_flag = False
         self.frame_num = 0
         self.status = {}
 
@@ -20,8 +20,18 @@ class SessionManager:
         Args:
             start (bool): true if start frame, false if end frame
         """
-        frame = core.G3Frame(core.G3FrameType.Observation)
+        frame = core.G3Frame(core.G3FrameType.none)
         frame['sostream_flowcontrol'] = (1 if start else 2)
+        return frame
+
+    def status_frame(self):
+        pass
+
+    def start_session(self):
+        self.session_id = time.time()
+
+        frame = core.G3Frame(core.G3FrameType.Observation)
+
         if self.stream_id is not None:
             frame['sostream_id'] = self.stream_id
 
@@ -29,7 +39,13 @@ class SessionManager:
         frame['time'] = core.G3Time.Now()
         frame['frame_num'] = self.frame_num
         self.frame_num += 1
+
         return frame
+
+    def end_session(self):
+        self.session_id = None
+        self.end_session_flag = False
+        self.frame_num = 0
 
     def __call__(self, frame):
         out = [frame]
@@ -39,11 +55,9 @@ class SessionManager:
         if frame.type == core.G3FrameType.none:
             if self.stream_id is not None:
                 frame['sostream_id'] = self.stream_id
-            if self.end_session:
+            if self.end_session_flag:
                 out.insert(0, self.flowcontrol_frame(start=False))
-                self.session_id = None
-                self.end_session = False
-                self.frame_num = 0
+                self.end_session()
             return out
 
         if self.session_id is not None:
@@ -55,8 +69,9 @@ class SessionManager:
         # and insert fc frame before data.
         if frame.type == core.G3FrameType.Scan:
             if self.session_id is None:
-                self.session_id = time.time()
+                session_frame = self.start_session()
                 out.insert(0, self.flowcontrol_frame(start=True))
+                out.insert(1, session_frame)
 
                 frame['session_id'] = self.session_id
                 frame['frame_num'] = self.frame_num
@@ -76,8 +91,11 @@ class SessionManager:
             # and if its not don't transmit frame.
             if self.session_id is None:
                 if enable:
-                    self.session_id = time.time()
+                    session_frame = self.start_session()
                     out.append(self.flowcontrol_frame(True))
+                    out.append(session_frame)
+
+                    return out
                 else:
                     return []
 
@@ -89,5 +107,5 @@ class SessionManager:
                 if enable is None:
                     return out
                 elif not enable:
-                    self.end_session = True
+                    self.end_session_flag = True
                     return out

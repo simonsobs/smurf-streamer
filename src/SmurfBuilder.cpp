@@ -71,8 +71,6 @@ void SmurfBuilder::FlushReadStash(){
 
     TimestampType timing_type = read_stash_.front()->timing_type_;
 
-    printf("Start time: %" PRId64 "\n", ts_base.start.time);
-
     // Initialize timestream map
     G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
     for (int i = 0; i < nchans; i++){

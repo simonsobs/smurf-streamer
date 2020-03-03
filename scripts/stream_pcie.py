@@ -8,7 +8,7 @@ import threading
 import shlex 
 import pysmurf.core.devices
 import pysmurf.core.server_scripts.Common as pysmurf_common
-
+from pprint import pprint
 
 def main():
     parser = pysmurf_common.make_parser()
@@ -39,14 +39,30 @@ def main():
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
                                    max_queue_size=1000)
 
+    app_core = 'root.FpgaTopLevel.AppTop.AppCore'
+
+    meta_registers = [
+        f'{app_core}.enableStreaming',
+        'root.RogueVersion',
+        'root.RoueDirectory',
+        'root.SmurfApplication',
+    ]
+
+    for i in range(8):
+        meta_registers.extend([
+            f'{app_core}.SysgenCryo.Base[{i}].band',
+            f'{app_core}.SysgenCryo.Base[{i}].etaMagArray',
+            f'{app_core}.SysgenCryo.Base[{i}].etaPhaseArray',
+            f'{app_core}.SysgenCryo.Base[{i}].amplitudeScaleArray',
+            f'{app_core}.SysgenCryo.Base[{i}].centerFrequencyArray'
+        ])
+
+
     vgs = {
-        'root.FpgaTopLevel.AppTop.AppCore.enableStreaming': 
-            {'groups': ['publish', 'stream'], 'pollInterval': None},
-        'root.RogueVersion'     : {'groups' : ['publish','stream'], 'pollInterval': None},
-        'root.RogueDirectory'   : {'groups' : ['publish','stream'], 'pollInterval': None},
-        'root.SmurfApplication' : {'groups' : ['publish','stream'], 'pollInterval': None},
-        'root.SmurfProcessor'   : {'groups' : ['publish','stream'], 'pollInterval': None},
+        k: {'groups': ['publish', 'stream'], 'pollInterval': None} for k in meta_registers
     }
+
+    pprint(f"Subscribin to groups: \n{meta_registers}")
 
     pcie_kwargs = sosmurf.util.get_kwargs(args, 'pcie', comm_type='pcie-rssi-interleaved')
     root_kwargs = sosmurf.util.get_kwargs(args,'cmb_pcie', txDevice = transmitter, VariableGroups=vgs)
