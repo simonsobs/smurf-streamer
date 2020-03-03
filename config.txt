@@ -1,4 +1,0 @@
-port = 4536
-frame_time = 1.
-max_queue_size = 100
-flac_level = 0
