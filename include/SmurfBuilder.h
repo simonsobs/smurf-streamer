@@ -11,7 +11,12 @@
 
 #define MAX_DATASOURCE_QUEUE_SIZE 3000
 
-//
+// Flow control constants
+#define FC_ALIVE   0
+#define FC_START   1
+#define FC_STOP    2
+#define FC_CLEANSE 3
+
 class SmurfBuilder : public G3EventBuilder{
 public:
     SmurfBuilder();

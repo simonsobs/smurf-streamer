@@ -48,7 +48,7 @@ void SmurfBuilder::FlushReadStash(){
 
     if (read_stash_.empty()){
         G3FramePtr frame = boost::make_shared<G3Frame>();
-        frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(0));
+        frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(FC_ALIVE));
         frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
         FrameOut(frame);
         return;
