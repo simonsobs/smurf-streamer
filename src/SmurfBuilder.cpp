@@ -19,6 +19,13 @@ SmurfBuilder::SmurfBuilder() :
     agg_duration_(3)
 {
     process_stash_thread_ = std::thread(ProcessStashThread, this);
+
+    // creates list of TES bias keys
+    char buff[10];
+    for (int i = 0; i < N_TES_BIAS; i++){
+        sprintf(buff, "bias%02d", i);
+        bias_keys_.push_back(buff);
+    }
 }
 
 SmurfBuilder::~SmurfBuilder(){
@@ -78,10 +85,11 @@ void SmurfBuilder::FlushReadStash(){
             chan_names_[i].c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
         ));
     }
+
     G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
     for (int i = 0; i < N_TES_BIAS; i++){
         tes_bias_map->insert(std::make_pair(
-            std::to_string(i).c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
+            bias_keys_[i].c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
         ));
     }
 
@@ -94,8 +102,7 @@ void SmurfBuilder::FlushReadStash(){
         }
 
         for (int i = 0; i < 16; i++){
-            std::string tes_name = std::to_string(i);
-            (*((*tes_bias_map)[tes_name]))[sample] = (*x)->getTESBias(i);
+            (*((*tes_bias_map)[bias_keys_[i]]))[sample] = (*x)->getTESBias(i);
         }
     }
 
