@@ -50,6 +50,9 @@ private:
 
     std::vector<std::string> chan_names_;
 
+    // Keys for the TES bias timestream map
+    std::vector<std::string> bias_keys_;
+
     // Stores current output frame number
     uint32_t out_num_;
 };
