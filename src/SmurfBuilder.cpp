@@ -166,6 +166,8 @@ void SmurfBuilder::setup_python(){
     "Takes transmitted smurf-packets and puts them into G3Frames, starting off "
     "the stream's G3Pipeline ",
     bp::init<>())
+    .def("GetAggDuration", &SmurfBuilder::GetAggDuration)
+    .def("SetAggDuration", &SmurfBuilder::SetAggDuration)
     ;
 
     bp::implicitly_convertible<SmurfBuilderPtr, G3ModulePtr>();

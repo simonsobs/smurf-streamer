@@ -22,14 +22,10 @@ def main():
     args = parser.parse_args()
     pysmurf_common.process_args(args)
 
-
-    builder = sosmurf.SmurfBuilder()
-    transmitter = sosmurf.SmurfTransmitter(
-        builder, name="SOSmurfTransmitter", debug_meta=True, debug_data=False
-    )
+    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, agg_time=1.0)
 
     pipe = core.G3Pipeline()
-    pipe.Add(builder)
+    pipe.Add(stream_root.builder)
     pipe.Add(sosmurf.SessionManager.SessionManager, stream_id=args.stream_id)
     pipe.Add(sosmurf.util.stream_dumper)
     pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
@@ -50,9 +46,10 @@ def main():
                          pv_dump_file   = args.pv_dump_file,
                          disable_bay0   = args.disable_bay0,
                          disable_bay1   = args.disable_bay1,
-                         txDevice       = transmitter,
+                         txDevice       = stream_root,
                          VariableGroups = vgs) as root:
         print("Loaded Emulation root", flush=True)
+
 
         # Add dummy TES bias values ([-8:7]), for testing purposes.
         for i in range(16):

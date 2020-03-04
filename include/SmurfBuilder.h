@@ -25,6 +25,9 @@ public:
     static void setup_python();
 
     float agg_duration_; // Aggregation duration in seconds
+    void SetAggDuration(float dur){ agg_duration_ = dur;};
+    const float GetAggDuration(){ return agg_duration_; };
+
 
 protected:
     void ProcessNewData();
@@ -36,9 +39,10 @@ private:
 
     uint16_t num_channels_;
 
-
     // Puts all stashed data in G3Frame and sends it out.
     void FlushReadStash();
+
+    // safely swaps read and write stashes
     void SwapStash();
 
     // Calls FlushStash every agg_duration_ seconds
