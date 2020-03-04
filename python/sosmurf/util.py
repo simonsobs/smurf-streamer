@@ -4,6 +4,24 @@ import subprocess
 import os
 import pyrogue
 import sys
+from spt3g import core
+
+class stream_dumper:
+    """Simple dump module that ignores flow-control keep_alive frames"""
+    def __init__(self):
+        self.last_frame_idle=False
+
+    def __call__(self, frame):
+        if frame.type == core.G3FrameType.none:
+            if frame['sostream_flowcontrol'] == 0:
+                print('.', end='', flush=True)
+                self.last_frame_idle=True
+                return
+
+        if self.last_frame_idle:
+            print('')
+
+        print(frame)
 
 def setup_server():
     """
