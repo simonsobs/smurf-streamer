@@ -38,7 +38,7 @@ class SessionManager:
         pass
 
     def start_session(self):
-        self.session_id = time.time()
+        self.session_id = int(time.time())
 
         frame = core.G3Frame(core.G3FrameType.Observation)
 
