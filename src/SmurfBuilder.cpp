@@ -35,12 +35,20 @@ SmurfBuilder::~SmurfBuilder(){
 
 void SmurfBuilder::ProcessStashThread(SmurfBuilder *builder){
     builder->running_ = true;
+
     while (builder->running_) {
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(int(1000 * builder->agg_duration_))
-        );
+
+        auto start = std::chrono::system_clock::now();
         builder->SwapStash();
         builder->FlushReadStash();
+        auto end = std::chrono::system_clock::now();
+
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::chrono::milliseconds iter_time((int)(1000 * builder->agg_duration_));
+        std::chrono::milliseconds sleep_time = iter_time - diff;
+
+        if (sleep_time.count() > 0)
+            std::this_thread::sleep_for(sleep_time);
     }
 }
 
