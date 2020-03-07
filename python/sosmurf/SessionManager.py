@@ -3,7 +3,7 @@ import yaml
 import time
 from enum import Enum
 
-class FlowControl:
+class FlowControl(Enum):
     """Flow control enumeration."""
     ALIVE = 0
     START = 1
@@ -31,7 +31,7 @@ class SessionManager:
                 flow control type
         """
         frame = core.G3Frame(core.G3FrameType.none)
-        frame['sostream_flowcontrol'] = fc
+        frame['sostream_flowcontrol'] = fc.value
         return frame
 
     def status_frame(self):
@@ -66,11 +66,11 @@ class SessionManager:
                 out.append(self.flowcontrol_frame(FlowControl.END))
 
                 f = core.G3Frame(core.G3FrameType.Observation)
-                f['sostream_flowcontrol'] = FlowControl.CLEANSE
+                f['sostream_flowcontrol'] = FlowControl.CLEANSE.value
                 out.append(f)
 
                 f = core.G3Frame(core.G3FrameType.Wiring)
-                f['sostream_flowcontrol'] = FlowControl.CLEANSE
+                f['sostream_flowcontrol'] = FlowControl.CLEANSE.value
                 out.append(f)
 
                 self.session_id = None
