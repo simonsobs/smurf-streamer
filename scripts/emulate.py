@@ -14,8 +14,6 @@ def main():
 
     parser = pysmurf_common.make_parser()
 
-    # modified_args = sosmurf.util.setup_server()
-
     parser.add_argument('--stream-port', type=int, default=4536)
     parser.add_argument('--stream-id', type=str)
 
@@ -28,8 +26,9 @@ def main():
     pipe.Add(stream_root.builder)
     pipe.Add(sosmurf.SessionManager.SessionManager, stream_id=args.stream_id)
     pipe.Add(sosmurf.util.stream_dumper)
-    pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
-                                   max_queue_size=1000)
+    pipe.Add(core.G3NetworkSender, 
+        hostname='*', port=args.stream_port, max_queue_size=1000
+    )
 
     vgs = {
         'root.FpgaTopLevel.AppTop.AppCore.enableStreaming': 

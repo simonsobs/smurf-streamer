@@ -15,24 +15,23 @@ def main():
     parser.add_argument('--stream-port', type=int, default=4536)
     parser.add_argument('--stream-id', type=str)
 
-    args = parser.parse_args()
+    modified_args = sosmurf.util.setup_server()
+
+    args = parser.parse_args(shlex.split(modified_args))
     pysmurf_common.process_args(args)
-    from pysmurf.core.roots.DevBoardEth import DevBoardEth
 
     if args.ip_addr is None:
         raise argparse.ArgumentError("Must specify --addr for ethernet based devices")
 
-    builder = sosmurf.SmurfBuilder()
-    transmitter = sosmurf.SmurfTransmitter(
-        builder, name="SOSmurfTransmitter", debug_meta=False, debug_data=False
-    )
+    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, agg_time=1.0)
 
     pipe = core.G3Pipeline()
-    pipe.Add(builder)
+    pipe.Add(stream_root.builder)
     pipe.Add(sosmurf.SessionManager.SessionManager, stream_id = args.stream_id)
-    pipe.Add(core.Dump)
-    pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
-                                   max_queue_size=1000)
+    pipe.Add(sosmurf.util.stream_dumper)
+    pipe.Add(core.G3NetworkSender, 
+        hostname='*', port=args.stream_port, max_queue_size=1000
+    )
 
     vgs = {
         'root.RogueVersion'     : {'groups' : ['publish','stream'], 'pollInterval': None},
@@ -43,6 +42,8 @@ def main():
 
     pcie_kwargs = sosmurf.util.get_kwargs(args, 'pcie', comm_type='eth-rssi-interleaved')
     root_kwargs = sosmurf.util.get_kwargs(args,'dev_board_eth', txDevice = transmitter, VariableGroups=vgs)
+    
+    from pysmurf.core.roots.DevBoardEth import DevBoardEth
     
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
         with DevBoardEth(**root_kwargs) as root:

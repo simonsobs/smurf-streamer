@@ -21,24 +21,20 @@ def main():
     args = parser.parse_args(shlex.split(modified_args))
     pysmurf_common.process_args(args)
 
-    from pysmurf.core.roots.CmbPcie import CmbPcie
-
     if args.ip_addr: 
         pysmurf_common.verify_ip(args)
 
-
-    builder = sosmurf.SmurfBuilder()
-    transmitter = sosmurf.SmurfTransmitter(
-        builder, name="SOSmurfTransmitter", debug_meta=False, debug_data=False
-    )
+    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, agg_time=1.0)
 
     pipe = core.G3Pipeline()
-    pipe.Add(builder)
+    pipe.Add(stream_root.builder)
     pipe.Add(sosmurf.SessionManager.SessionManager, stream_id = args.stream_id)
-    pipe.Add(core.Dump)
-    pipe.Add(core.G3NetworkSender, hostname='*', port=args.stream_port,
-                                   max_queue_size=1000)
+    pipe.Add(sosmurf.util.stream_dumper)
+    pipe.Add(core.G3NetworkSender, 
+        hostname='*', port=args.stream_port, max_queue_size=1000
+    )
 
+    # Builds variable groups dict
     app_core = 'root.FpgaTopLevel.AppTop.AppCore'
 
     meta_registers = [
@@ -57,16 +53,17 @@ def main():
             f'{app_core}.SysgenCryo.Base[{i}].centerFrequencyArray'
         ])
 
-
     vgs = {
         k: {'groups': ['publish', 'stream'], 'pollInterval': None} for k in meta_registers
     }
 
-    pprint(f"Subscribin to groups: \n{meta_registers}")
+    pprint(f"Subscribing to groups: \n{meta_registers}")
 
     pcie_kwargs = sosmurf.util.get_kwargs(args, 'pcie', comm_type='pcie-rssi-interleaved')
     root_kwargs = sosmurf.util.get_kwargs(args,'cmb_pcie', txDevice = transmitter, VariableGroups=vgs)
-    
+
+    from pysmurf.core.roots.CmbPcie import CmbPcie    
+
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
         with CmbPcie(**root_kwargs) as root:
             print("got pysmurf root", flush=True)
