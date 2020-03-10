@@ -60,7 +60,7 @@ def main():
     pprint(f"Subscribing to groups: \n{meta_registers}")
 
     pcie_kwargs = sosmurf.util.get_kwargs(args, 'pcie', comm_type='pcie-rssi-interleaved')
-    root_kwargs = sosmurf.util.get_kwargs(args,'cmb_pcie', txDevice = transmitter, VariableGroups=vgs)
+    root_kwargs = sosmurf.util.get_kwargs(args,'cmb_pcie', txDevice = stream_root, VariableGroups=vgs)
 
     from pysmurf.core.roots.CmbPcie import CmbPcie    
 
