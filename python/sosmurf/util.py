@@ -30,7 +30,7 @@ def setup_server():
         modified version.
     """
     print("-"*60)
-    print("Running setup_server.sh:\n")
+    print("Running setup_server.sh {}\n".format(' '.join(sys.argv[1:])))
 
     script = '/usr/local/src/smurf-streamer/scripts/setup_server.sh'
     proc = subprocess.run(

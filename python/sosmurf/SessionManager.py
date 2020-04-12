@@ -103,8 +103,8 @@ class SessionManager:
 
             status_update = yaml.safe_load(frame['status'])
             self.status.update(status_update)
-            enable = int(status_update.get(self.enable_streams))
-            print(enable, enable==1)
+
+            enable = int(status_update.get(self.enable_streams, -1))
             if self.session_id is None:
                 if enable == 1:
                     # Returns [start, session, status]

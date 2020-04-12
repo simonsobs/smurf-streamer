@@ -1,13 +1,15 @@
 from spt3g import core
 
+import rogue
 import pyrogue.gui
 import argparse
 import sosmurf
 import sys
 import threading
-import pysmurf.core.server_scripts.Common as pysmurf_common
 
-from pysmurf.core.roots.CmbEth import CmbEth
+import pysmurf.core.devices
+import pysmurf.core.server_scripts.Common as pysmurf_common
+import shlex
 
 def main():
     parser = pysmurf_common.make_parser()
@@ -33,20 +35,36 @@ def main():
         hostname='*', port=args.stream_port, max_queue_size=1000
     )
 
+    # Builds variable groups dict
+    app_core = 'root.FpgaTopLevel.AppTop.AppCore'
+
+    meta_registers = [
+        f'{app_core}.enableStreaming',
+        'root.RogueVersion',
+        'root.RoueDirectory',
+        'root.SmurfApplication',
+    ]
+
+    for i in range(8):
+        meta_registers.extend([
+            f'{app_core}.SysgenCryo.Base[{i}].band',
+            f'{app_core}.SysgenCryo.Base[{i}].etaMagArray',
+            f'{app_core}.SysgenCryo.Base[{i}].etaPhaseArray',
+            f'{app_core}.SysgenCryo.Base[{i}].amplitudeScaleArray',
+            f'{app_core}.SysgenCryo.Base[{i}].centerFrequencyArray'
+        ])
+
     vgs = {
-        'root.RogueVersion'     : {'groups' : ['publish','stream'], 'pollInterval': None},
-        'root.RogueDirectory'   : {'groups' : ['publish','stream'], 'pollInterval': None},
-        'root.SmurfApplication' : {'groups' : ['publish','stream'], 'pollInterval': None},
-        'root.SmurfProcessor'   : {'groups' : ['publish','stream'], 'pollInterval': None},
+        k: {'groups': ['publish', 'stream'], 'pollInterval': None} for k in meta_registers
     }
 
     pcie_kwargs = sosmurf.util.get_kwargs(args, 'pcie', comm_type='eth-rssi-interleaved')
-    root_kwargs = sosmurf.util.get_kwargs(args,'dev_board_eth', txDevice = transmitter, VariableGroups=vgs)
+    root_kwargs = sosmurf.util.get_kwargs(args,'dev_board_eth', txDevice = stream_root, VariableGroups=vgs)
     
-    from pysmurf.core.roots.DevBoardEth import DevBoardEth
+    from pysmurf.core.roots.CmbEth import CmbEth
     
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        with DevBoardEth(**root_kwargs) as root:
+        with CmbEth(**root_kwargs) as root:
             print("got pysmurf root", flush=True)
             if args.use_gui:
                 print("Starting GUI...")
