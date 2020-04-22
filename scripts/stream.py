@@ -5,81 +5,89 @@ import pyrogue.gui
 import argparse
 import sosmurf
 import sys
-import threading
+import yaml
+import os
 
 import pysmurf.core.devices
 import pysmurf.core.server_scripts.Common as pysmurf_common
 import shlex
 
+
 def main():
+    with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f:
+        cfg = yaml.safe_load(f)
+
+    slot = int(os.environ['SLOT'])
+    crate_id = cfg['crate_id']
+    comm_type = cfg['comm_type']
+    slot_cfg = cfg['slots'][f'SLOT[{slot}]']
+
     parser = pysmurf_common.make_parser()
+    parser.add_argument(
+        '--stream-port', type=int,
+        default=slot_cfg.get('stream_port', 4530 + slot ))
+    parser.add_argument(
+        '--stream-id', type=str,
+        default=slot_cfg.get('stream_id', f'c{crate_id}s{slot}'))
 
-    parser.add_argument('--stream-port', type=int, default=4536)
-    parser.add_argument('--stream-id', type=str)
-
-    modified_args = sosmurf.util.setup_server()
-
+    modified_args = sosmurf.util.setup_server(cfg, slot)
     args = parser.parse_args(shlex.split(modified_args))
     pysmurf_common.process_args(args)
 
-    if args.ip_addr is None:
-        raise argparse.ArgumentError("Must specify --addr for ethernet based devices")
+    # Sets some reasonable defaults
+    if not args.epics_prefix:
+        args.epics_prefix = f"smurf_server_s{slot}"
+        print(f"Using epics root {args.epics_prefix}")
+    if args.config_file is None:
+        args.config_file = slot_cfg.get('rogue_defaults')
+        print(f"Using config_file {args.config_file}")
 
-    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, agg_time=1.0)
-
+    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False,
+                                     debug_data=False, agg_time=1.0)
     pipe = core.G3Pipeline()
     pipe.Add(stream_root.builder)
-    pipe.Add(sosmurf.SessionManager.SessionManager, stream_id = args.stream_id)
-    pipe.Add(sosmurf.util.stream_dumper)
-    pipe.Add(core.G3NetworkSender, 
-        hostname='*', port=args.stream_port, max_queue_size=1000
-    )
+    pipe.Add(sosmurf.SessionManager.SessionManager, stream_id=args.stream_id)
+    # pipe.Add(sosmurf.util.stream_dumper)
+    pipe.Add(core.G3NetworkSender, hostname='*',
+             port=args.stream_port, max_queue_size=1000)
 
-    # Builds variable groups dict
-    app_core = 'root.FpgaTopLevel.AppTop.AppCore'
+    if comm_type == 'eth':
+        from pysmurf.core.roots.CmbEth import CmbEth
+        CmbRoot = CmbEth
+    elif comm_type == 'pcie':
+        from pysmurf.core.roots.CmbPcie import CmbPcie
+        CmbRoot = CmbPcie
+    else:
+        raise ValueError(
+            f"comm_type is {comm_type}. Must be either 'eth'' or 'pcie'.")
 
-    meta_registers = [
-        f'{app_core}.enableStreaming',
-        'root.RogueVersion',
-        'root.RoueDirectory',
-        'root.SmurfApplication',
-    ]
+    vgs = sosmurf.util.get_metadata_groups(None)
 
-    for i in range(8):
-        meta_registers.extend([
-            f'{app_core}.SysgenCryo.Base[{i}].band',
-            f'{app_core}.SysgenCryo.Base[{i}].etaMagArray',
-            f'{app_core}.SysgenCryo.Base[{i}].etaPhaseArray',
-            f'{app_core}.SysgenCryo.Base[{i}].amplitudeScaleArray',
-            f'{app_core}.SysgenCryo.Base[{i}].centerFrequencyArray'
-        ])
-
-    vgs = {
-        k: {'groups': ['publish', 'stream'], 'pollInterval': None} for k in meta_registers
+    pcie_kwargs = {
+        'lane': args.pcie_rssi_lane, 'ip_addr': args.ip_addr,
+        'dev_rssi': args.pcie_dev_rssi, 'dev_data': args.pcie_dev_data,
+        'comm_type': f'{comm_type}-rssi-interleaved'
     }
+    root_kwargs = {
+        'ip_addr': args.ip_addr, 'config_file': args.config_file,
+        'epics_prefix': args.epics_prefix, 'polling_en': args.polling_en,
+        'pv_dump_file': args.pv_dump_file, 'disable_bay0': args.disable_bay0,
+        'disable_bay1': args.disable_bay1, 'configure': args.configure,
+        'txDevice': stream_root, 'VariableGroups': vgs,
+    }
+    if comm_type == 'pcie':
+        root_kwargs.update({
+            'pcie_rssi_lane': args.pcie_rssi_lane,
+            'pcie_dev_rssi': args.pcie_dev_rssi,
+            'pcie_dev_data': args.pcie_dev_data,
+        })
 
-    pcie_kwargs = sosmurf.util.get_kwargs(args, 'pcie', comm_type='eth-rssi-interleaved')
-    root_kwargs = sosmurf.util.get_kwargs(args,'dev_board_eth', txDevice = stream_root, VariableGroups=vgs)
-    
-    from pysmurf.core.roots.CmbEth import CmbEth
-    
     with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        with CmbEth(**root_kwargs) as root:
-            print("got pysmurf root", flush=True)
-            if args.use_gui:
-                print("Starting GUI...")
-                app_top = pyrogue.gui.application(sys.argv)
-                gui_top = pyrogue.gui.GuiTop(incGroups=None,excGroups=None)
-                gui_top.setWindowTitle(args.windows_title)
-                gui_top.addTree(root)
-                gui_top.resize(800,1000)
-                app_top.exec_()
+        with CmbRoot(**root_kwargs) as root:
+            print("got pysmurf root. Starting G3 Pipeline...", flush=True)
+            pipe.Run(profile=False)
+            print("Closed G3 pipeline")
 
-            else:
-                # pyrogue.waitCntrlC()
-                print("Starting G3Pipeline", flush=True)
-                pipe.Run(profile=False)
-                print("Closed G3 pipeline")
 
 if __name__ == '__main__':
     main()
