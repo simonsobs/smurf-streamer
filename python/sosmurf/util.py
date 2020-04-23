@@ -6,7 +6,7 @@ import pyrogue
 import sys
 from spt3g import core
 import yaml
-
+import re
 
 class stream_dumper:
     """Simple dump module that ignores flow-control keep_alive frames"""
@@ -73,8 +73,99 @@ def setup_server(cfg, slot):
     return args
 
 
-def get_metadata_groups(filename):
-    return {}
+class VariableGroups:
+    """
+    This class is to help translate from a ``meta_regsiters.yaml`` file to
+    the variable groups object taken by the rogue root. The yaml file should
+    be like ordinary yaml, except that the keys can be somewhat templated. The
+    values should be either a `group_mask`, or the bitwise-or of the group
+    keys it should belong to, or a list `[group_mask, pollInterval]`.
+
+    For instance, the yaml::
+
+        root.FpgaTopLevel.AppTop.AppCore:
+            enableStreaming: (3, 1)
+            SysgenCryo.Base[{{range(4)}}]:
+                etaMagArray: 3
+
+    will expand to ::
+
+        {
+            'root.FpgaTopLevel.AppTop.AppCore.enableStreaming':
+                {'groups': ['stream', 'publish'], 'pollInterval': 1}
+            'root.FpgaTopLevel.AppTop.AppCore.Base[0].etaMagArray':
+                {'groups': ['stream', 'publish']}
+            'root.FpgaTopLevel.AppTop.AppCore.Base[1].etaMagArray':
+                {'groups': ['stream', 'publish']}
+            'root.FpgaTopLevel.AppTop.AppCore.Base[2].etaMagArray':
+                {'groups': ['stream', 'publish']}
+            'root.FpgaTopLevel.AppTop.AppCore.Base[3].etaMagArray':
+                {'groups': ['stream', 'publish']}
+        }
+    """
+    group_key = {'stream': 1, 'publish': 2}
+
+    def __init__(self, data):
+        self._data = data
+        self.data = self._data.copy()
+        self.template()
+        self.flatten()
+        self.process()
+
+    def process(self):
+        for k, v in self.data.items():
+            self.data[k] = {
+                'groups': [],
+                'pollInterval': None
+            }
+
+            if isinstance(v, list):
+                group_mask = v[0]
+                self.data[k]['pollInterval'] = v[1]
+            else:
+                group_mask = v
+            for g, i in VariableGroups.group_key.items():
+                if group_mask & i:
+                    self.data[k]['groups'].append(g)
+
+    @classmethod
+    def from_file(cls, filename):
+        with open(filename) as f:
+            data = yaml.safe_load(f)
+        return cls(data)
+
+    def template(self):
+        def helper(data):
+            rv = {}
+            for k_, v_ in data.items():
+                k, v = k_, v_
+                if isinstance(v, dict):
+                    v = helper(v)
+                m = re.search('{{(.*?)}}', k)
+                if m is not None:
+                    x = eval(m.group(1))
+                    try:
+                        for i in x:
+                            rv[k.replace(m.group(0), str(i))] = v
+                    except TypeError:
+                        rv[k.replace(m.group(0), str(x))] = v
+                else:
+                    rv[k] = v
+            return rv
+        self.data = helper(self.data)
+
+    def flatten(self):
+        def helper(data):
+            rv = {}
+            for k, v in data.items():
+                if type(v) is not dict:
+                    rv[k] = v
+                    continue
+                for k2, v2 in helper(v).items():
+                    rv[f'{k}.{k2}'] = v2
+            return rv
+        self.data = helper(self.data)
+
 
 def get_kwargs(args, dev_type, **extra_kwargs):
     """
@@ -84,6 +175,7 @@ def get_kwargs(args, dev_type, **extra_kwargs):
             args: Argparse namespace
             dev_type (str):
                 type of device. Can be 'pcie', 'cmb_eth', or 'dev_board_eth'.
+
 
         Any additional keyword arguments will be added to the dict.
     """

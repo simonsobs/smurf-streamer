@@ -61,8 +61,6 @@ def main():
         raise ValueError(
             f"comm_type is {comm_type}. Must be either 'eth'' or 'pcie'.")
 
-    vgs = sosmurf.util.get_metadata_groups(None)
-
     pcie_kwargs = {
         'lane': args.pcie_rssi_lane, 'ip_addr': args.ip_addr,
         'dev_rssi': args.pcie_dev_rssi, 'dev_data': args.pcie_dev_data,
@@ -73,8 +71,14 @@ def main():
         'epics_prefix': args.epics_prefix, 'polling_en': args.polling_en,
         'pv_dump_file': args.pv_dump_file, 'disable_bay0': args.disable_bay0,
         'disable_bay1': args.disable_bay1, 'configure': args.configure,
-        'txDevice': stream_root, 'VariableGroups': vgs,
+        'txDevice': stream_root
     }
+
+    meta_file = cfg.get('meta_register_file')
+    if meta_file is not None:
+        vgs = sosmurf.util.VariableGroups.from_file(meta_file)
+        root_kwargs['VariableGroups'] = vgs.data
+
     if comm_type == 'pcie':
         root_kwargs.update({
             'pcie_rssi_lane': args.pcie_rssi_lane,
