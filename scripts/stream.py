@@ -74,8 +74,9 @@ def main():
         'txDevice': stream_root
     }
 
-    meta_file = cfg.get('meta_register_file')
+    meta_file = os.path.expandvars(cfg.get('meta_register_file'))
     if meta_file is not None:
+        print(f"Loading metadata registers from {meta_file}...")
         vgs = sosmurf.util.VariableGroups.from_file(meta_file)
         root_kwargs['VariableGroups'] = vgs.data
 
