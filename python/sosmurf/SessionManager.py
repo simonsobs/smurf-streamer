@@ -35,7 +35,16 @@ class SessionManager:
         return frame
 
     def status_frame(self):
-        pass
+        frame = core.G3Frame(core.G3FrameType.Wiring)
+        if self.stream_id is not None:
+            frame['sostream_id'] = self.stream_id
+        frame['status'] = yaml.safe_dump(self.status)
+        frame['session_id'] = self.session_id
+        frame['time'] = core.G3Time.Now()
+        frame['frame_num'] = self.frame_num
+        self.frame_num += 1
+
+        return frame
 
     def start_session(self):
         self.session_id = int(time.time())
@@ -87,6 +96,8 @@ class SessionManager:
             if self.session_id is None:
                 # Returns [start, session, data]
                 session_frame = self.start_session()
+                status_frame = self.status_frame()
+                out.insert(0, status_frame)
                 out.insert(0, session_frame)
                 out.insert(0, self.flowcontrol_frame(FlowControl.START))
 
