@@ -40,7 +40,7 @@ private:
     uint16_t num_channels_;
 
     // Puts all stashed data in G3Frame and sends it out.
-    void FlushReadStash();
+    void FlushStash();
 
     // safely swaps read and write stashes
     void SwapStash();
@@ -49,6 +49,7 @@ private:
     static void ProcessStashThread(SmurfBuilder *);
 
     bool running_;
+    bool debug_;
 
     std::thread process_stash_thread_;
 

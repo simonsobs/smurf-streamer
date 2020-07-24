@@ -16,7 +16,7 @@ namespace bp = boost::python;
 SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE),
     out_num_(0), num_channels_(0),
-    agg_duration_(3)
+    agg_duration_(3), debug_(true)
 {
     process_stash_thread_ = std::thread(ProcessStashThread, this);
 
@@ -39,8 +39,7 @@ void SmurfBuilder::ProcessStashThread(SmurfBuilder *builder){
     while (builder->running_) {
 
         auto start = std::chrono::system_clock::now();
-        builder->SwapStash();
-        builder->FlushReadStash();
+        builder->FlushStash();
         auto end = std::chrono::system_clock::now();
 
         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -52,15 +51,16 @@ void SmurfBuilder::ProcessStashThread(SmurfBuilder *builder){
     }
 }
 
-void SmurfBuilder::SwapStash(){
-    std::lock_guard<std::mutex> read_lock(read_stash_lock_);
-    std::lock_guard<std::mutex> write_lock(write_stash_lock_);
-    write_stash_.swap(read_stash_);
-}
-
-void SmurfBuilder::FlushReadStash(){
+void SmurfBuilder::FlushStash(){
+    auto start = std::chrono::system_clock::now();
     std::lock_guard<std::mutex> read_lock(read_stash_lock_);
 
+    // Swaps stashes
+    {
+        std::lock_guard<std::mutex> write_lock(write_stash_lock_);
+        write_stash_.swap(read_stash_);
+    }
+    
     if (read_stash_.empty()){
         G3FramePtr frame = boost::make_shared<G3Frame>();
         frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(FC_ALIVE));
@@ -80,38 +80,33 @@ void SmurfBuilder::FlushReadStash(){
         }
     }
 
+    // Generic Timestream used to initialize real timestreams
     G3Timestream ts_base(read_stash_.size(), NAN);
     ts_base.start = read_stash_.front()->time_;
     ts_base.stop = read_stash_.back()->time_;
 
-    TimestampType timing_type = read_stash_.front()->timing_type_;
-
-    // Initialize timestream map
+    TimestampType timing_type = read_stash_.front()->timing_type_;        
     G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
+
     for (int i = 0; i < nchans; i++){
-        data_map->insert(std::make_pair(
-            chan_names_[i].c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
-        ));
+        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
+        int sample=0;
+        for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
+            (*ts)[sample] = (*x)->Channels()[i];
+        }
+
+        data_map->insert(std::make_pair(chan_names_[i].c_str(), ts));
     }
 
+    // Loads TES Biases
     G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
     for (int i = 0; i < N_TES_BIAS; i++){
-        tes_bias_map->insert(std::make_pair(
-            bias_keys_[i].c_str(), G3TimestreamPtr(new G3Timestream(ts_base))
-        ));
-    }
-
-    // Insert sample data into timestreams
-    int sample = 0;
-    for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-        auto chan_data = (*x)->Channels();
-        for (int i = 0; i < nchans; i++){
-            (*((*data_map)[chan_names_[i]]))[sample] = chan_data[i];
+        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
+        int sample = 0;
+        for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
+            (*ts)[sample] = (*x)->getTESBias(i);
         }
-
-        for (int i = 0; i < 16; i++){
-            (*((*tes_bias_map)[bias_keys_[i]]))[sample] = (*x)->getTESBias(i);
-        }
+        tes_bias_map->insert(std::make_pair(bias_keys_[i].c_str(), ts));
     }
 
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
@@ -121,11 +116,18 @@ void SmurfBuilder::FlushReadStash(){
     );
     frame->Put("data", data_map);
     frame->Put("tes_biases", tes_bias_map);
-    frame->Put("num_samples", boost::make_shared<G3Int>(sample));
+    frame->Put("num_samples", boost::make_shared<G3Int>(data_map->NSamples()));
 
     read_stash_.clear();
-
     FrameOut(frame);
+
+    auto end = std::chrono::system_clock::now();
+    if (debug_){
+        printf("Frame Out (%d channels, %d samples)\n", nchans, data_map->NSamples());
+        auto flush_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        printf("Flushed in %d ms\n", flush_time);
+        printf("%lu elements in queue...\n", queue_.size());
+    }
 }
 
 void SmurfBuilder::ProcessNewData(){
@@ -151,13 +153,13 @@ void SmurfBuilder::ProcessNewData(){
         FrameOut(frame);
     }
     else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
-
         if (num_channels_ == 0){
             num_channels_ = data_pkt->NChannels();
         }
         else if (data_pkt->NChannels() != num_channels_){
-            SwapStash();
-            FlushReadStash();
+            printf("num_channels has changed from %d to %d! Flushing stash...\n",
+                    num_channels_, data_pkt->NChannels());
+            FlushStash();
             num_channels_ = data_pkt->NChannels();
         }
 
