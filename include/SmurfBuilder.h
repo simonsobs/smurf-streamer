@@ -28,6 +28,8 @@ public:
     void SetAggDuration(float dur){ agg_duration_ = dur;};
     const float GetAggDuration(){ return agg_duration_; };
 
+    void       setDebug(bool d) { debug_ = d;    };
+    const bool getDebug()       { return debug_; };
 
 protected:
     void ProcessNewData();
