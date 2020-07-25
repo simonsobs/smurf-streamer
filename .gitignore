@@ -10,8 +10,10 @@ fw/pyrogue
 dev
 
 ._docker-compose.yml
+.idea/
 
 fw
 .ipynb_checkpoints/
 *.ipynb
 *.swp
+sync

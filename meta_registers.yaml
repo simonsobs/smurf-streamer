@@ -1,0 +1,23 @@
+################################################################################
+# Metadata registers file. {{ }} groups will be templated! If they evaluate to
+# an iterable it will expand that so the key and value are copied for each
+# iteration.
+#
+# Register values should be the bitwise | of their variable groups, with:
+#   stream (Sent in metadata stream):  1
+#   publish (Sent to pysmurf publisher): 2
+#
+# If you want to set a polling interval, the value should be a list
+# [groups, poll_interval]
+################################################################################
+root.RogueVersion: 3
+root.RogueDirectory: 3
+root.SmurfApplication: 3
+root.FpgaTopLevel.AppTop.AppCore:
+    enableStreaming: 3
+    SysgenCryo.Base[{{range(4)}}]:
+        band: 3
+        etaMagArray: 3
+        etaPhaseArray: 3
+        amplitudeScaleArray: 3
+        centerFrequencyArray: 3
