@@ -16,7 +16,7 @@ namespace bp = boost::python;
 SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE),
     out_num_(0), num_channels_(0),
-    agg_duration_(3), debug_(true)
+    agg_duration_(3), debug_(false)
 {
     process_stash_thread_ = std::thread(ProcessStashThread, this);
 
@@ -60,7 +60,7 @@ void SmurfBuilder::FlushStash(){
         std::lock_guard<std::mutex> write_lock(write_stash_lock_);
         write_stash_.swap(read_stash_);
     }
-    
+
     if (read_stash_.empty()){
         G3FramePtr frame = boost::make_shared<G3Frame>();
         frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(FC_ALIVE));
@@ -123,9 +123,9 @@ void SmurfBuilder::FlushStash(){
 
     auto end = std::chrono::system_clock::now();
     if (debug_){
-        printf("Frame Out (%d channels, %d samples)\n", nchans, data_map->NSamples());
-        auto flush_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        printf("Flushed in %d ms\n", flush_time);
+        printf("Frame Out (%d channels, %lu samples)\n", nchans, data_map->NSamples());
+        long flush_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        printf("Flushed in %ld ms\n", flush_time);
         printf("%lu elements in queue...\n", queue_.size());
     }
 }
@@ -178,6 +178,8 @@ void SmurfBuilder::setup_python(){
     bp::init<>())
     .def("GetAggDuration", &SmurfBuilder::GetAggDuration)
     .def("SetAggDuration", &SmurfBuilder::SetAggDuration)
+    .def("getDebug", &SmurfBuilder::getDebug)
+    .def("setDebug", &SmurfBuilder::setDebug)
     ;
 
     bp::implicitly_convertible<SmurfBuilderPtr, G3ModulePtr>();

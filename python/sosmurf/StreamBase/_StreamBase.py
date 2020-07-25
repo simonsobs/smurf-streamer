@@ -8,7 +8,7 @@ class StreamBase(pyrogue.Device):
     """
         Stream Base pyrogue object.
     """
-    def __init__(self, name, debug_data=False, debug_meta=False, agg_time=1.0, **kwargs):
+    def __init__(self, name, debug_data=False, debug_meta=False, debug_builder=False, agg_time=1.0, **kwargs):
         pyrogue.Device.__init__(self, name=name, description='SMuRF Data CustomTransmitter', **kwargs)
 
         self.builder = sosmurfcore.SmurfBuilder()
@@ -31,6 +31,15 @@ class StreamBase(pyrogue.Device):
             value=debug_meta,
             localSet=lambda value: self._transmitter.setDebugMeta(value),
             localGet=self._transmitter.getDebugMeta))
+
+        # Add a variable for the Builder flag
+        self.add(pyrogue.LocalVariable(
+            name='DebugBuilder',
+            description='Set the debug mode for the Smurfbuilder',
+            mode='RW',
+            value=debug_builder,
+            localSet=lambda value: self.builder.setDebug(value),
+            localGet=self.builder.getDebug))
 
         self.add(pyrogue.LocalVariable(
             name='AggTime',

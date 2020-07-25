@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     pysmurf_common.process_args(args)
 
-    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, agg_time=1.0)
+    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, debug_builder=True, agg_time=1.0)
 
     pipe = core.G3Pipeline()
     pipe.Add(stream_root.builder)
