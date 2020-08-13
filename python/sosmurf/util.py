@@ -23,7 +23,7 @@ class stream_dumper:
         if self.last_frame_idle:
             print('')
 
-        print(frame)
+        print(frame, flush=True)
 
 
 def setup_server(cfg, slot):

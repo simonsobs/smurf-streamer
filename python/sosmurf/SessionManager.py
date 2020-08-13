@@ -42,6 +42,8 @@ class SessionManager:
         frame['session_id'] = self.session_id
         frame['time'] = core.G3Time.Now()
         frame['frame_num'] = self.frame_num
+        frame['dump'] = 1
+
         self.frame_num += 1
 
         return frame
@@ -97,9 +99,12 @@ class SessionManager:
                 # Returns [start, session, data]
                 session_frame = self.start_session()
                 status_frame = self.status_frame()
-                out.insert(0, status_frame)
-                out.insert(0, session_frame)
-                out.insert(0, self.flowcontrol_frame(FlowControl.START))
+                out = [
+                    self.flowcontrol_frame(FlowControl.START),
+                    session_frame,
+                    status_frame,
+                    frame
+                ]
 
             frame['session_id'] = self.session_id
             frame['frame_num'] = self.frame_num
@@ -120,8 +125,11 @@ class SessionManager:
                 if enable == 1:
                     # Returns [start, session, status]
                     session_frame = self.start_session()
-                    out.insert(0, session_frame)
-                    out.insert(0, self.flowcontrol_frame(FlowControl.START))
+                    out = [
+                        self.flowcontrol_frame(FlowControl.START),
+                        session_frame,
+                        self.status_frame()
+                    ]
 
                     return out
                 else:
@@ -129,6 +137,7 @@ class SessionManager:
                     return []
 
             else:
+                frame['dump'] = 0
                 frame['session_id'] = self.session_id
                 frame['frame_num'] = self.frame_num
                 self.frame_num += 1
