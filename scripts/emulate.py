@@ -32,7 +32,13 @@ def main():
 
     vgs = {
         'root.FpgaTopLevel.AppTop.AppCore.enableStreaming': 
-            {'groups' : ['publish','stream'], 'pollInterval': 0}
+            {'groups' : ['publish','stream'], 'pollInterval': 0},
+        'root.SmurfProcessor.SOStream.DebugMeta':
+            {'groups' : ['publish','stream'], 'pollInterval': 0},
+        'root.StreamDataSource.SourceEnable':
+            {'groups' : ['publish','stream'], 'pollInterval': 0},
+        'root.StreamDataSource.Period':
+            {'groups' : ['publish','stream'], 'pollInterval': 0},
     }
 
 

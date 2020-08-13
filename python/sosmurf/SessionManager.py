@@ -3,6 +3,10 @@ import yaml
 import time
 from enum import Enum
 
+
+SOSTREAM_VERSION = 1
+
+
 class FlowControl(Enum):
     """Flow control enumeration."""
     ALIVE = 0
@@ -34,18 +38,25 @@ class SessionManager:
         frame['sostream_flowcontrol'] = fc.value
         return frame
 
+    def tag_frame(self, frame):
+        frame['sostream_version'] = SOSTREAM_VERSION
+        frame['frame_num'] = self.frame_num
+        self.frame_num += 1
+        if self.session_id is not None:
+            frame['session_id'] = self.session_id
+        if 'time' not in frame:
+            frame['time'] = core.G3Time.Now()
+
+        return frame
+
     def status_frame(self):
         frame = core.G3Frame(core.G3FrameType.Wiring)
         if self.stream_id is not None:
             frame['sostream_id'] = self.stream_id
         frame['status'] = yaml.safe_dump(self.status)
-        frame['session_id'] = self.session_id
-        frame['time'] = core.G3Time.Now()
-        frame['frame_num'] = self.frame_num
         frame['dump'] = 1
 
-        self.frame_num += 1
-
+        self.tag_frame(frame)
         return frame
 
     def start_session(self):
@@ -56,11 +67,7 @@ class SessionManager:
         if self.stream_id is not None:
             frame['sostream_id'] = self.stream_id
 
-        frame['session_id'] = self.session_id
-        frame['time'] = core.G3Time.Now()
-        frame['frame_num'] = self.frame_num
-        self.frame_num += 1
-
+        self.tag_frame(frame)
         return frame
 
     def __call__(self, frame):
@@ -88,7 +95,6 @@ class SessionManager:
                 self.end_session_flag = False
                 self.frame_num = 0
 
-            return out
 
         #######################################
         # On Scan frames
@@ -106,10 +112,7 @@ class SessionManager:
                     frame
                 ]
 
-            frame['session_id'] = self.session_id
-            frame['frame_num'] = self.frame_num
-            self.frame_num += 1
-
+            self.tag_frame(frame)
             return out
 
         #######################################
@@ -135,15 +138,11 @@ class SessionManager:
                 else:
                     # Don't output any status frames if session is not active
                     return []
-
             else:
                 frame['dump'] = 0
-                frame['session_id'] = self.session_id
-                frame['frame_num'] = self.frame_num
-                self.frame_num += 1
-
                 if enable == 0:
                     self.end_session_flag = True
+                self.tag_frame(frame)
                 return out
 
 
