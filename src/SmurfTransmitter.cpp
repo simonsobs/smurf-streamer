@@ -1,12 +1,11 @@
 #include "SmurfTransmitter.h"
 #include "SmurfSample.h"
+#include "SmurfBuilder.h"
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <inttypes.h>
 
 namespace sct = smurf::core::transmitters;
-
-//
 
 SmurfTransmitter::SmurfTransmitter(G3EventBuilderPtr builder) :
     sct::BaseTransmitter(), builder_(builder),
@@ -41,23 +40,8 @@ void SmurfTransmitter::dataTransmit(SmurfPacketROPtr sp){
     if (debug_data_)
         printSmurfPacket(sp);
 
-    //TODO: Get high precision timing
     G3Time ts = G3Time::Now();
-    TimestampType timing_type = Timing_LowPrecision;
-
-    size_t nchans = sp->getHeader()->getNumberChannels();
-    SmurfSamplePtr smurf_sample(new SmurfSample(ts, nchans, timing_type));
-
-    auto channels = smurf_sample->Channels();
-    for (int i = 0; i < nchans; i++){
-        channels[i] = sp->getData(i);
-    }
-
-    // Sets TES Biases for SmurfSample
-    for (int i = 0; i < N_TES_BIAS; i++){ // Is this always going to be 16?
-        smurf_sample->setTESBias(i, sp->getHeader()->getTESBias(i));
-    }
-
+    SmurfSamplePtr smurf_sample(new SmurfSample(ts, sp));
     builder_->AsyncDatum(ts.time, smurf_sample);
 }
 

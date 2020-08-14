@@ -69,7 +69,7 @@ void SmurfBuilder::FlushStash(){
         return;
     }
 
-    int nchans = read_stash_.front()->NChannels();
+    int nchans = read_stash_.front()->sp->getHeader()->getNumberChannels();
 
     // Creates channel names
     if (nchans > chan_names_.size()){
@@ -92,11 +92,49 @@ void SmurfBuilder::FlushStash(){
         G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
         int sample=0;
         for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-            (*ts)[sample] = (*x)->Channels()[i];
+            (*ts)[sample] = (*x)->sp->getData(i);
         }
-
         data_map->insert(std::make_pair(chan_names_[i].c_str(), ts));
     }
+
+    // Loades Header Data
+    G3TimestreamMapPtr primary_map = G3TimestreamMapPtr(new G3TimestreamMap);
+    std::vector<std::string> primary_keys = {
+        "UnixTime", "FluxRampIncrement", "FluxRampOffset", "Counter0",
+        "Counter1", "Counter2", "AveragingResetBits", "FrameCounter",
+        "TESRelaySetting"
+    };
+    std::vector<G3TimestreamPtr> primary_vec;
+    for (auto key : primary_keys)
+        primary_vec.push_back(G3TimestreamPtr(new G3Timestream(ts_base)));
+
+    int sample = 0;
+    for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
+        auto hdr = (*x)->sp->getHeader();
+        (*primary_vec[0])[sample] = hdr->getUnixTime();
+        (*primary_vec[1])[sample] = hdr->getFluxRampIncrement();
+        (*primary_vec[2])[sample] = hdr->getFluxRampOffset();
+        (*primary_vec[3])[sample] = hdr->getCounter0();
+        (*primary_vec[4])[sample] = hdr->getCounter1();
+        (*primary_vec[5])[sample] = hdr->getCounter2();
+        (*primary_vec[6])[sample] = hdr->getAveragingResetBits();
+        (*primary_vec[7])[sample] = hdr->getFrameCounter();
+        (*primary_vec[8])[sample] = hdr->getTESRelaySetting();
+    }
+
+    int i = 0;
+    for (auto key : primary_keys){
+        primary_map->insert(std::make_pair(key, primary_vec[i]));
+        i++;
+    }
+
+    // Slow primary map
+    G3MapIntPtr slow_primary_map = G3MapIntPtr(new G3MapInt);
+    auto hdr = read_stash_.front()->sp->getHeader();
+    slow_primary_map->insert(std::make_pair("Version", hdr->getVersion()));
+    slow_primary_map->insert(std::make_pair("CrateID", hdr->getCrateID()));
+    slow_primary_map->insert(std::make_pair("SlotNumber", hdr->getSlotNumber()));
+    slow_primary_map->insert(std::make_pair("TimingConfiguration", hdr->getTimingConfiguration()));
 
     // Loads TES Biases
     G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
@@ -104,7 +142,7 @@ void SmurfBuilder::FlushStash(){
         G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
         int sample = 0;
         for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-            (*ts)[sample] = (*x)->getTESBias(i);
+            (*ts)[sample] = (*x)->sp->getHeader()->getTESBias(i);
         }
         tes_bias_map->insert(std::make_pair(bias_keys_[i].c_str(), ts));
     }
@@ -117,6 +155,9 @@ void SmurfBuilder::FlushStash(){
     frame->Put("data", data_map);
     frame->Put("tes_biases", tes_bias_map);
     frame->Put("num_samples", boost::make_shared<G3Int>(data_map->NSamples()));
+
+    frame->Put("primary", primary_map);
+    frame->Put("slow_primary", slow_primary_map);
 
     read_stash_.clear();
     FrameOut(frame);
@@ -153,14 +194,15 @@ void SmurfBuilder::ProcessNewData(){
         FrameOut(frame);
     }
     else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
+        auto hdr = data_pkt->sp->getHeader();
         if (num_channels_ == 0){
-            num_channels_ = data_pkt->NChannels();
+            num_channels_ = hdr->getNumberChannels();
         }
-        else if (data_pkt->NChannels() != num_channels_){
+        else if (hdr->getNumberChannels() != num_channels_){
             printf("num_channels has changed from %d to %d! Flushing stash...\n",
-                    num_channels_, data_pkt->NChannels());
+                    num_channels_, hdr->getNumberChannels());
             FlushStash();
-            num_channels_ = data_pkt->NChannels();
+            num_channels_ = hdr->getNumberChannels();
         }
 
         std::lock_guard<std::mutex> lock(write_stash_lock_);
