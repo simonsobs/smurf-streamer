@@ -35,13 +35,24 @@ public:
     SmurfSample(G3Time time, SmurfPacketROPtr sp) :
         G3FrameObject(), time_(time), sp(sp) {}
 
-    SmurfPacketROPtr sp;
-
-    G3Time time_;
-
-    static const TimestampType timing_type_ = Timing_LowPrecision;
+    const SmurfPacketROPtr sp;
 
     static void setup_python() {};
+
+    // Returns G3Time for packet. If time can be determined from timing system
+    // this will use that and the GetTimingParadigm will return HighPrecision.
+    // If not, this will use the timestamp generated in software and
+    // GetTimingParadigm will return LowPrecision.
+    const G3Time GetTime() const {
+        return time_;
+    }
+
+    const TimestampType GetTimingParadigm() const {
+        return Timing_LowPrecision;
+    }
+
+private:
+    const G3Time time_;
 };
 
 G3_POINTERS(SmurfSample);

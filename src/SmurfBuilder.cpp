@@ -4,6 +4,7 @@
 #include <G3Data.h>
 #include <G3Timestream.h>
 #include <G3Map.h>
+#include <G3Timesample.h>
 
 #include <chrono>
 #include <string>
@@ -70,6 +71,7 @@ void SmurfBuilder::FlushStash(){
     }
 
     int nchans = read_stash_.front()->sp->getHeader()->getNumberChannels();
+    int nsamps = read_stash_.size();
 
     // Creates channel names
     if (nchans > chan_names_.size()){
@@ -82,10 +84,10 @@ void SmurfBuilder::FlushStash(){
 
     // Generic Timestream used to initialize real timestreams
     G3Timestream ts_base(read_stash_.size(), NAN);
-    ts_base.start = read_stash_.front()->time_;
-    ts_base.stop = read_stash_.back()->time_;
+    ts_base.start = read_stash_.front()->GetTime();
+    ts_base.stop = read_stash_.back()->GetTime();
 
-    TimestampType timing_type = read_stash_.front()->timing_type_;        
+    TimestampType timing_type = read_stash_.front()->GetTimingParadigm();
     G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
 
     for (int i = 0; i < nchans; i++){
@@ -98,19 +100,24 @@ void SmurfBuilder::FlushStash(){
     }
 
     // Loades Header Data
-    G3TimestreamMapPtr primary_map = G3TimestreamMapPtr(new G3TimestreamMap);
     std::vector<std::string> primary_keys = {
         "UnixTime", "FluxRampIncrement", "FluxRampOffset", "Counter0",
         "Counter1", "Counter2", "AveragingResetBits", "FrameCounter",
         "TESRelaySetting"
     };
-    std::vector<G3TimestreamPtr> primary_vec;
+    std::vector<G3VectorIntPtr> primary_vec;
+    G3VectorTime sample_times = G3VectorTime(nsamps);
     for (auto key : primary_keys)
-        primary_vec.push_back(G3TimestreamPtr(new G3Timestream(ts_base)));
+        primary_vec.push_back(G3VectorIntPtr(new G3VectorInt(nsamps, 0)));
+
+    boost::shared_ptr<G3TimesampleMap> primary_map = boost::make_shared<G3TimesampleMap>();
 
     int sample = 0;
     for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
         auto hdr = (*x)->sp->getHeader();
+
+        sample_times[sample] = (*x)->GetTime();
+
         (*primary_vec[0])[sample] = hdr->getUnixTime();
         (*primary_vec[1])[sample] = hdr->getFluxRampIncrement();
         (*primary_vec[2])[sample] = hdr->getFluxRampOffset();
@@ -122,10 +129,16 @@ void SmurfBuilder::FlushStash(){
         (*primary_vec[8])[sample] = hdr->getTESRelaySetting();
     }
 
+    primary_map->times = sample_times;
+
     int i = 0;
     for (auto key : primary_keys){
         primary_map->insert(std::make_pair(key, primary_vec[i]));
         i++;
+    }
+
+    if (!primary_map->Check()){
+        printf("Primary Timesample Map failed it's check!\n");
     }
 
     // Slow primary map
