@@ -13,11 +13,40 @@
 root.RogueVersion: 3
 root.RogueDirectory: 3
 root.SmurfApplication: 3
-root.FpgaTopLevel.AppTop.AppCore:
-    enableStreaming: 3
-    SysgenCryo.Base[{{range(4)}}]:
-        band: 3
-        etaMagArray: 3
-        etaPhaseArray: 3
-        amplitudeScaleArray: 3
-        centerFrequencyArray: 3
+root.FpgaTopLevel:
+    AppTop.AppCore:
+        enableStreaming: 3
+        SysgenCryo.Base[{{range(8)}}]:
+            band: 1
+            bandCenterMHz: 1
+            toneFrequencyOffsetMHz: 1
+            CryoChannels:
+                centerFrequencyArray: 1
+                amplitudeScaleArray: 1
+                etaMagArray: 1
+                etaPhaseArray: 1
+        RtmCryoDet:
+            RampMaxCnt: 1
+            EnableRampTrigger: 1
+    AmcCarrierCore.AxiVersion:
+        Temperature: 1
+root.SmurfProcessor:
+    ChannelMapper:
+        NumChannels: 1
+        PayloadSize: 1
+        Mask: 1
+    Filter:
+        Disable: 1
+        Order: 1
+        Gain: 1
+        A: 1
+        B: 1
+    Downsampler:
+        Disable: 1
+        Factor: 1
+    PostDataEmulator:
+        Disable: 1
+        Type: 1
+        Amplitude: 1
+        Offset: 1
+        Period: 1
