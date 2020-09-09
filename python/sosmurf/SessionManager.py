@@ -19,7 +19,7 @@ class SessionManager:
     #enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.StreamControl.EnableStreams"
     enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.enableStreaming"
 
-    def __init__(self, stream_id=None):
+    def __init__(self, stream_id=''):
         self.stream_id = stream_id
         self.session_id = None
         self.end_session_flag = False
@@ -40,6 +40,7 @@ class SessionManager:
 
     def tag_frame(self, frame):
         frame['sostream_version'] = SOSTREAM_VERSION
+        frame['sostream_id'] = self.stream_id
         frame['frame_num'] = self.frame_num
         self.frame_num += 1
         if self.session_id is not None:
@@ -51,8 +52,6 @@ class SessionManager:
 
     def status_frame(self):
         frame = core.G3Frame(core.G3FrameType.Wiring)
-        if self.stream_id is not None:
-            frame['sostream_id'] = self.stream_id
         frame['status'] = yaml.safe_dump(self.status)
         frame['dump'] = 1
 
@@ -63,9 +62,6 @@ class SessionManager:
         self.session_id = int(time.time())
 
         frame = core.G3Frame(core.G3FrameType.Observation)
-
-        if self.stream_id is not None:
-            frame['sostream_id'] = self.stream_id
 
         self.tag_frame(frame)
         return frame

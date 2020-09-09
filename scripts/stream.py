@@ -13,13 +13,13 @@ import pysmurf.core.server_scripts.Common as pysmurf_common
 import shlex
 
 
-def main():
-    with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f:
+def main(): with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f:
         cfg = yaml.safe_load(f)
 
     slot = int(os.environ['SLOT'])
     crate_id = cfg['crate_id']
     comm_type = cfg['comm_type']
+    shelf_manager = cfg['shelf_manager']
     slot_cfg = cfg['slots'][f'SLOT[{slot}]']
 
     parser = pysmurf_common.make_parser()
@@ -28,7 +28,7 @@ def main():
         default=slot_cfg.get('stream_port', 4530 + slot ))
     parser.add_argument(
         '--stream-id', type=str,
-        default=slot_cfg.get('stream_id', f'c{crate_id}s{slot}'))
+        default=slot_cfg.get('stream_id', f'crate{crate_id}slot{slot}'))
 
     modified_args = sosmurf.util.setup_server(cfg, slot)
     args = parser.parse_args(shlex.split(modified_args))
@@ -41,6 +41,10 @@ def main():
     if args.config_file is None:
         args.config_file = slot_cfg.get('rogue_defaults')
         print(f"Using config_file {args.config_file}")
+
+    if args.pcie_rssi_lane is None:
+        args.pcie_rssi_lane = slot - 2
+        print(f"Using pcie lane {args.pcie_rssi_lane}")
 
     stream_root = sosmurf.StreamBase("SOStream", debug_meta=False,
                                      debug_data=False, agg_time=1.0)
@@ -67,12 +71,15 @@ def main():
         'comm_type': f'{comm_type}-rssi-interleaved'
     }
     root_kwargs = {
-        'ip_addr': args.ip_addr, 'config_file': args.config_file,
+        'config_file': args.config_file,
         'epics_prefix': args.epics_prefix, 'polling_en': args.polling_en,
         'pv_dump_file': args.pv_dump_file, 'disable_bay0': args.disable_bay0,
         'disable_bay1': args.disable_bay1, 'configure': args.configure,
         'txDevice': stream_root
     }
+
+    if comm_type == 'eth':
+        root_kwargs['ip_addr'] = args.ip_addr
 
     meta_file = os.path.expandvars(cfg.get('meta_register_file'))
     if meta_file is not None:

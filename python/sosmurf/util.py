@@ -36,14 +36,17 @@ def setup_server(cfg, slot):
     # Replaces any of these args with defaults from sys_config
     pre_parser = argparse.ArgumentParser()
     pre_parser.add_argument('--shelfmanager', '-S')
-    # pre_parser.add_argument('--slot', '-N')
     pre_parser.add_argument('--addr', '-a')
     pre_parser.add_argument('--comm-type', '-c')
     args, _ = pre_parser.parse_known_args()
     setup_args = sys.argv[1:]
 
-    if args.addr is None and args.shelfmanager is None:
-        setup_args.extend(['--addr', f'10.0.1.{100+slot}'])
+    if args.shelfmanager is None:
+        setup_args.extend(['-S', cfg['shelf_manager'], '-N', str(slot)])
+
+    # elif args.addr is None and args.shelfmanager is None:
+    #     setup_args.extend(['--addr', f'10.0.1.{100+slot}'])
+
     if args.comm_type is None:
         setup_args.extend(['--comm-type', cfg['comm_type']])
 
