@@ -13,7 +13,8 @@ import pysmurf.core.server_scripts.Common as pysmurf_common
 import shlex
 
 
-def main(): with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f:
+def main():
+    with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f:
         cfg = yaml.safe_load(f)
 
     slot = int(os.environ['SLOT'])
@@ -71,7 +72,7 @@ def main(): with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f
         'comm_type': f'{comm_type}-rssi-interleaved'
     }
     root_kwargs = {
-        'config_file': args.config_file,
+        'config_file': args.config_file, 'server_port': args.server_port,
         'epics_prefix': args.epics_prefix, 'polling_en': args.polling_en,
         'pv_dump_file': args.pv_dump_file, 'disable_bay0': args.disable_bay0,
         'disable_bay1': args.disable_bay1, 'configure': args.configure,
