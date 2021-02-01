@@ -1,4 +1,5 @@
-FROM tidair/pysmurf-server:v2.1.0
+FROM tidair/pysmurf-server:v3.0.0
+# FROM tidair/pysmurf-server-base:v4.1.0-123-g24cfebd2
 
 # Installs spt3g to /usr/local/src/
 WORKDIR /usr/local/src/
@@ -32,7 +33,7 @@ RUN cd spt3g_software \
       && mkdir -p build \
       && cd build \
       && cmake .. -DPYTHON_EXECUTABLE=`which python3` \
-      && make \
+      && make core \
       && make tarball
 
 
