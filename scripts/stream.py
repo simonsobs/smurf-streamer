@@ -82,7 +82,9 @@ def main():
     if comm_type == 'eth':
         root_kwargs['ip_addr'] = args.ip_addr
 
-    meta_file = os.path.expandvars(cfg.get('meta_register_file'))
+    meta_file = os.path.expandvars(
+        cfg.get('meta_register_file', '/tmp/meta_registers.yaml')
+    )
     if meta_file is not None:
         print(f"Loading metadata registers from {meta_file}...")
         vgs = sosmurf.util.VariableGroups.from_file(meta_file)

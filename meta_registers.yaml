@@ -11,25 +11,24 @@
 # [groups, poll_interval]
 ################################################################################
 root.RogueVersion: 3
-root.RogueDirectory: 3
-root.SmurfApplication: 3
-root.FpgaTopLevel:
-    AppTop.AppCore:
-        enableStreaming: 3
-        SysgenCryo.Base[{{range(8)}}]:
-            band: 1
-            bandCenterMHz: 1
-            toneFrequencyOffsetMHz: 1
-            CryoChannels:
-                centerFrequencyArray: 1
-                amplitudeScaleArray: 1
-                etaMagArray: 1
-                etaPhaseArray: 1
-        RtmCryoDet:
-            RampMaxCnt: 1
-            EnableRampTrigger: 1
-    AmcCarrierCore.AxiVersion:
-        Temperature: 1
+root.RogueDirectory: [3, 1]
+#root.SmurfApplication: 3
+root.FpgaTopLevel.AppTop.AppCore:
+    enableStreaming: 3
+    SysgenCryo.Base[{{range(8)}}]:
+        band: 1
+        bandCenterMHz: 1
+        toneFrequencyOffsetMHz: 1
+        CryoChannels:
+            centerFrequencyArray: 1
+            amplitudeScaleArray: 1
+            etaMagArray: 1
+            etaPhaseArray: 1
+    RtmCryoDet:
+        RampMaxCnt: 1
+        EnableRampTrigger: 1
+root.FpgaTopLevel.AmcCarrierCore.AxiVersion:
+    Temperature: [3, 1]
 root.SmurfProcessor:
     ChannelMapper:
         NumChannels: 1
