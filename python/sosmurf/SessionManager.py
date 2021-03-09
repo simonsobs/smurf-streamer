@@ -117,7 +117,22 @@ class SessionManager:
         elif frame.type == core.G3FrameType.Wiring:
 
             status_update = yaml.safe_load(frame['status'])
-            self.status.update(status_update)
+
+            # Get difference between status-frame and current status.
+            diff = {}
+            for k, v in status_update.items():
+                if k not in self.status:
+                    diff[k] = v
+                elif v != self.status[k]:
+                    diff[k] = v
+            if len(diff) == 0:  # Skip if there's no difference
+                return []
+
+            self.status.update(frame['status'])
+
+            # Replace full status update with difference
+            del frame['status']
+            frame['status'] = diff
 
             enable = int(status_update.get(self.enable_streams, -1))
             if self.session_id is None:
@@ -140,5 +155,3 @@ class SessionManager:
                     self.end_session_flag = True
                 self.tag_frame(frame)
                 return out
-
-
