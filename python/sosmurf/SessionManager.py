@@ -128,11 +128,11 @@ class SessionManager:
             if len(diff) == 0:  # Skip if there's no difference
                 return []
 
-            self.status.update(frame['status'])
+            self.status.update(status_update)
 
             # Replace full status update with difference
             del frame['status']
-            frame['status'] = diff
+            frame['status'] = yaml.dump(diff)
 
             enable = int(status_update.get(self.enable_streams, -1))
             if self.session_id is None:
