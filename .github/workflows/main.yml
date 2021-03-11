@@ -32,6 +32,8 @@ jobs:
           DOCKERHUB_ORG: "simonsobs"
         run: |
           export DOCKER_TAG=`git describe --tags --always`
+          echo $DOCKER_TAG
+
           echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin
 
           docker-compose build
@@ -39,7 +41,7 @@ jobs:
           docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:latest
           docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
 
-          docker push ${DOCKERHUB_ORG}/smurf-streamer:latest
-          docker push ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
+          # docker push ${DOCKERHUB_ORG}/smurf-streamer:latest
+          # docker push ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
 
           echo ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG} pushed
