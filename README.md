@@ -1,5 +1,9 @@
 # SmurfStreamer
 
+<a href="https://github.com/simonsobs/smurf-streamer/actions/workflows/main.yml">
+<img src="https://img.shields.io/github/workflow/status/simonsobs/smurf-streamer/Build%20and%20Push%20Dockers?style=for-the-badge"/>
+</a>
+
 ## Description
 -------------------
 The G3Streamer is a module that collects downsampled data from the
