@@ -36,8 +36,8 @@ jobs:
 
           docker-compose build
 
-          docker tag smurf-stremaer:latest ${DOCKERHUB_ORG}/smurf-streamer:latest
-          docker tag smurf-stremaer:latest ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
+          docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:latest
+          docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
 
           docker push ${DOCKERHUB_ORG}/smurf-streamer:latest
           docker push ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
