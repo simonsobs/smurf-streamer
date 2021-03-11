@@ -24,8 +24,9 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+        # Fetch all history for all tags and branches
         with:
-          fetch-depth=0
+          fetch-depth: 0
 
       - name: Build docker images and push
         env:
@@ -43,7 +44,7 @@ jobs:
           docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:latest
           docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
 
-          # docker push ${DOCKERHUB_ORG}/smurf-streamer:latest
-          # docker push ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
+          docker push ${DOCKERHUB_ORG}/smurf-streamer:latest
+          docker push ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
 
           echo ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG} pushed
