@@ -33,7 +33,7 @@ RUN cd spt3g_software \
       && mkdir -p build \
       && cd build \
       && cmake .. -DPYTHON_EXECUTABLE=`which python3` \
-      && make core \
+      && make core version\
       && make tarball
 
 
