@@ -1,7 +1,7 @@
 FROM simonsobs/spt3g:0.3-23-gd903080 AS spt3g_base
 WORKDIR /app_lib/spt3g_software/build
 
-FROM tidair/pysmurf-server:v3.0.0
+FROM tidair/pysmurf-server:v5.0.0
 
 WORKDIR /usr/local/src/
 
