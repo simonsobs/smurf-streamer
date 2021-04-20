@@ -50,6 +50,42 @@ class StreamBase(pyrogue.Device):
             localSet=lambda value: self.builder.SetAggDuration(value),
             localGet=self.builder.GetAggDuration))
 
+        # Add "Disable" variable
+        self.add(pyrogue.LocalVariable(
+            name='Disable',
+            description="Disables the SmurfTransmitter, stopping the "
+                        "SmurfStreamer from receiving data from upstream",
+            mode='RW',
+            value=False,
+            localSet=lambda value: self._transmitter.setDisable(value),
+            localGet=self._transmitter.getDisable))
+
+        # Add the data dropped counter variable
+        self.add(pyrogue.LocalVariable(
+            name='dataDropCnt',
+            description="Number of data frames dropped by the "
+                        "SmurfTransmitter's data buffer",
+            mode='RO',
+            value=0,
+            pollInterval=1,
+            localGet=self._transmitter.getDataDropCnt))
+
+        # Add the metaData dropped counter variable
+        self.add(pyrogue.LocalVariable(
+            name='metaDropCnt',
+            description="Number of metadata frames dropped by the "
+                        "SmurfTransmitter's metadata buffer",
+            mode='RO',
+            value=0,
+            pollInterval=1,
+            localGet=self._transmitter.getMetaDropCnt))
+
+        # Command to clear all the counters
+        self.add(pyrogue.LocalCommand(
+            name='clearCnt',
+            description='Clears dataDrop and metaDrop counters',
+            function=self._transmitter.clearCnt))
+
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()

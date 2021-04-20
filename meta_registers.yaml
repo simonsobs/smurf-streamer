@@ -4,8 +4,8 @@
 # iteration.
 #
 # Register values should be the bitwise | of their variable groups, with:
-#   stream (Sent in metadata stream):  1
-#   publish (Sent to pysmurf publisher): 2
+#     stream (Sent in metadata stream):  1
+#     publish (Sent to pysmurf publisher): 2
 #
 # If you want to set a polling interval, the value should be a list
 # [groups, poll_interval]
@@ -31,6 +31,9 @@ root.FpgaTopLevel:
     AmcCarrierCore.AxiVersion:
         Temperature: 1
 root.SmurfProcessor:
+    FrameRxStats:
+        FrameLossCnt: 3
+        FrameOutOrderCnt: 3
     ChannelMapper:
         NumChannels: 1
         PayloadSize: 1
@@ -50,3 +53,6 @@ root.SmurfProcessor:
         Amplitude: 1
         Offset: 1
         Period: 1
+    SOStream:
+        dataDropCnt: 3
+        metaDropCnt: 3
