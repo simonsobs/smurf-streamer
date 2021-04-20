@@ -55,4 +55,4 @@ root.SmurfProcessor:
         Period: 1
     SOStream:
         dataDropCnt: 3
-        metaDrop Cnt: 3
+        metaDropCnt: 3

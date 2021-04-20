@@ -53,7 +53,8 @@ class StreamBase(pyrogue.Device):
         # Add "Disable" variable
         self.add(pyrogue.LocalVariable(
             name='Disable',
-            description='Disable the processing block. Data will just pass thorough to the next slave.',
+            description="Disables the SmurfTransmitter, stopping the "
+                        "SmurfStreamer from receiving data from upstream",
             mode='RW',
             value=False,
             localSet=lambda value: self._transmitter.setDisable(value),
@@ -62,7 +63,8 @@ class StreamBase(pyrogue.Device):
         # Add the data dropped counter variable
         self.add(pyrogue.LocalVariable(
             name='dataDropCnt',
-            description='Number of data frame dropped',
+            description="Number of data frames dropped by the "
+                        "SmurfTransmitter's data buffer",
             mode='RO',
             value=0,
             pollInterval=1,
@@ -71,7 +73,8 @@ class StreamBase(pyrogue.Device):
         # Add the metaData dropped counter variable
         self.add(pyrogue.LocalVariable(
             name='metaDropCnt',
-            description='Number of metadata frame dropped',
+            description="Number of metadata frames dropped by the "
+                        "SmurfTransmitter's metadata buffer",
             mode='RO',
             value=0,
             pollInterval=1,
@@ -80,7 +83,7 @@ class StreamBase(pyrogue.Device):
         # Command to clear all the counters
         self.add(pyrogue.LocalCommand(
             name='clearCnt',
-            description='Clear all counters',
+            description='Clears dataDrop and metaDrop counters',
             function=self._transmitter.clearCnt))
 
 
