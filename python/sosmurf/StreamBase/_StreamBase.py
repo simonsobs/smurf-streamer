@@ -50,6 +50,39 @@ class StreamBase(pyrogue.Device):
             localSet=lambda value: self.builder.SetAggDuration(value),
             localGet=self.builder.GetAggDuration))
 
+        # Add "Disable" variable
+        self.add(pyrogue.LocalVariable(
+            name='Disable',
+            description='Disable the processing block. Data will just pass thorough to the next slave.',
+            mode='RW',
+            value=False,
+            localSet=lambda value: self._transmitter.setDisable(value),
+            localGet=self._transmitter.getDisable))
+
+        # Add the data dropped counter variable
+        self.add(pyrogue.LocalVariable(
+            name='dataDropCnt',
+            description='Number of data frame dropped',
+            mode='RO',
+            value=0,
+            pollInterval=1,
+            localGet=self._transmitter.getDataDropCnt))
+
+        # Add the metaData dropped counter variable
+        self.add(pyrogue.LocalVariable(
+            name='metaDropCnt',
+            description='Number of metadata frame dropped',
+            mode='RO',
+            value=0,
+            pollInterval=1,
+            localGet=self._transmitter.getMetaDropCnt))
+
+        # Command to clear all the counters
+        self.add(pyrogue.LocalCommand(
+            name='clearCnt',
+            description='Clear all counters',
+            function=self._transmitter.clearCnt))
+
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
