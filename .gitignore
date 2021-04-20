@@ -1,4 +1,5 @@
 *.core
+lib
 
 a*.o
 *.g3

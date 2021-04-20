@@ -31,7 +31,7 @@ def main():
     )
 
     vgs = {
-        'root.FpgaTopLevel.AppTop.AppCore.enableStreaming': 
+        'root.FpgaTopLevel.AppTop.AppCore.enableStreaming':
             {'groups' : ['publish','stream'], 'pollInterval': 0},
         'root.SmurfProcessor.SOStream.DebugMeta':
             {'groups' : ['publish','stream'], 'pollInterval': 0},
@@ -54,11 +54,6 @@ def main():
                          txDevice       = stream_root,
                          VariableGroups = vgs) as root:
         print("Loaded Emulation root", flush=True)
-
-
-        # Add dummy TES bias values ([-8:7]), for testing purposes.
-        for i in range(16):
-            root._smurf_processor.setTesBias(index=i, val=(i-8))
 
         pipe.Run(profile=True)
         
