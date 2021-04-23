@@ -31,7 +31,7 @@ class SessionManager:
         Creates flow control frame.
 
         Args:
-            fc (int): 
+            fc (int):
                 flow control type
         """
         frame = core.G3Frame(core.G3FrameType.none)

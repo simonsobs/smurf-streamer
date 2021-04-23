@@ -26,10 +26,14 @@ def main():
     parser = pysmurf_common.make_parser()
     parser.add_argument(
         '--stream-port', type=int,
-        default=slot_cfg.get('stream_port', 4530 + slot ))
+        default=slot_cfg.get('stream_port', 4530 + slot))
     parser.add_argument(
         '--stream-id', type=str,
         default=slot_cfg.get('stream_id', f'crate{crate_id}slot{slot}'))
+    parser.add_argument(
+        '--emulate', action='store_true',
+        help='Run server in emulation mode'
+    )
 
     modified_args = sosmurf.util.setup_server(cfg, slot)
     args = parser.parse_args(shlex.split(modified_args))
@@ -37,8 +41,12 @@ def main():
 
     # Sets some reasonable defaults
     if not args.epics_prefix:
-        args.epics_prefix = f"smurf_server_s{slot}"
+        if args.emulate:
+            args.epics_prefix = f"smurf_emulator_s{slot}"
+        else:
+            args.epics_prefix = f"smurf_server_s{slot}"
         print(f"Using epics root {args.epics_prefix}")
+
     if args.config_file is None:
         args.config_file = slot_cfg.get('rogue_defaults')
         print(f"Using config_file {args.config_file}")
@@ -56,15 +64,11 @@ def main():
     pipe.Add(core.G3NetworkSender, hostname='*',
              port=args.stream_port, max_queue_size=1000)
 
-    if comm_type == 'eth':
-        from pysmurf.core.roots.CmbEth import CmbEth
-        CmbRoot = CmbEth
-    elif comm_type == 'pcie':
-        from pysmurf.core.roots.CmbPcie import CmbPcie
-        CmbRoot = CmbPcie
-    else:
-        raise ValueError(
-            f"comm_type is {comm_type}. Must be either 'eth'' or 'pcie'.")
+    meta_file = os.path.expandvars(cfg.get('meta_register_file'))
+    vgs = None
+    if meta_file is not None:
+        print(f"Loading metadata registers from {meta_file}...")
+        vgs = sosmurf.util.VariableGroups.from_file(meta_file)
 
     pcie_kwargs = {
         'lane': args.pcie_rssi_lane, 'ip_addr': args.ip_addr,
@@ -78,15 +82,24 @@ def main():
         'disable_bay1': args.disable_bay1, 'configure': args.configure,
         'txDevice': stream_root
     }
+    if vgs is not None:
+        root_kwargs['VariableGroups'] = vgs.data
 
-    if comm_type == 'eth':
+    if comm_type == 'eth' and not args.emulate:
         root_kwargs['ip_addr'] = args.ip_addr
 
-    meta_file = os.path.expandvars(cfg.get('meta_register_file'))
-    if meta_file is not None:
-        print(f"Loading metadata registers from {meta_file}...")
-        vgs = sosmurf.util.VariableGroups.from_file(meta_file)
-        root_kwargs['VariableGroups'] = vgs.data
+    if args.emulate:
+        from pysmurf.core.roots.EmulationRoot import EmulationRoot
+        CmbRoot = EmulationRoot
+    elif comm_type == 'eth':
+        from pysmurf.core.roots.CmbEth import CmbEth
+        CmbRoot = CmbEth
+    elif comm_type == 'pcie':
+        from pysmurf.core.roots.CmbPcie import CmbPcie
+        CmbRoot = CmbPcie
+    else:
+        raise ValueError(
+            f"comm_type is {comm_type}. Must be either 'eth'' or 'pcie'.")
 
     if comm_type == 'pcie':
         root_kwargs.update({
@@ -95,11 +108,18 @@ def main():
             'pcie_dev_data': args.pcie_dev_data,
         })
 
-    with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        with CmbRoot(**root_kwargs) as root:
+    if args.emulate:
+        print("Starting Emulation root")
+        with EmulationRoot(**root_kwargs):
             print("got pysmurf root. Starting G3 Pipeline...", flush=True)
             pipe.Run(profile=False)
             print("Closed G3 pipeline")
+    else:
+        with pysmurf.core.devices.PcieCard(**pcie_kwargs):
+            with CmbRoot(**root_kwargs):
+                print("got pysmurf root. Starting G3 Pipeline...", flush=True)
+                pipe.Run(profile=False)
+                print("Closed G3 pipeline")
 
 
 if __name__ == '__main__':

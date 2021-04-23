@@ -38,7 +38,12 @@ def setup_server(cfg, slot):
     pre_parser.add_argument('--shelfmanager', '-S')
     pre_parser.add_argument('--addr', '-a')
     pre_parser.add_argument('--comm-type', '-c')
+    pre_parser.add_argument('--emulate', action='store_true')
     args, _ = pre_parser.parse_known_args()
+
+    if args.emulate:
+        return ' '.join(sys.argv[1:])
+
     setup_args = sys.argv[1:]
 
     if args.shelfmanager is None:
