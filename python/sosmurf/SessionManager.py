@@ -90,7 +90,7 @@ class SessionManager:
                 self.session_id = None
                 self.end_session_flag = False
                 self.frame_num = 0
-
+                return out
 
         #######################################
         # On Scan frames
