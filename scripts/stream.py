@@ -22,6 +22,7 @@ def main():
     comm_type = cfg['comm_type']
     shelf_manager = cfg['shelf_manager']
     slot_cfg = cfg['slots'][f'SLOT[{slot}]']
+    g3_dir = cfg['g3_dir']
 
     parser = pysmurf_common.make_parser()
     parser.add_argument(
@@ -38,6 +39,8 @@ def main():
     modified_args = sosmurf.util.setup_server(cfg, slot)
     args = parser.parse_args(shlex.split(modified_args))
     pysmurf_common.process_args(args)
+
+    print(f"Stream id: {args.stream_id}")
 
     # Sets some reasonable defaults
     if not args.epics_prefix:
@@ -57,12 +60,16 @@ def main():
 
     stream_root = sosmurf.StreamBase("SOStream", debug_meta=False,
                                      debug_data=False, agg_time=1.0)
+    file_writer = sosmurf.SOFileWriter("SOFileWriter", g3_dir, file_dur=30)
+    stream_root.add(file_writer)
+
     pipe = core.G3Pipeline()
     pipe.Add(stream_root.builder)
     pipe.Add(sosmurf.SessionManager.SessionManager, stream_id=args.stream_id)
     # pipe.Add(sosmurf.util.stream_dumper)
-    pipe.Add(core.G3NetworkSender, hostname='*',
-             port=args.stream_port, max_queue_size=1000)
+    # pipe.Add(core.G3NetworkSender, hostname='*',
+    #         port=args.stream_port, max_queue_size=1000)
+    pipe.Add(file_writer.rotator)
 
     meta_file = os.path.expandvars(cfg.get('meta_register_file'))
     vgs = None
@@ -112,13 +119,13 @@ def main():
         print("Starting Emulation root")
         with EmulationRoot(**root_kwargs):
             print("got pysmurf root. Starting G3 Pipeline...", flush=True)
-            pipe.Run(profile=False)
+            pipe.Run(profile=True)
             print("Closed G3 pipeline")
     else:
         with pysmurf.core.devices.PcieCard(**pcie_kwargs):
             with CmbRoot(**root_kwargs):
                 print("got pysmurf root. Starting G3 Pipeline...", flush=True)
-                pipe.Run(profile=False)
+                pipe.Run(profile=True)
                 print("Closed G3 pipeline")
 
 
