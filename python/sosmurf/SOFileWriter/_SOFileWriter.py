@@ -7,7 +7,7 @@ import time
 from sosmurf.SessionManager import FlowControl
 
 class G3Rotator:
-    def __init__(self, data_path, file_dur):
+    def __init__(self, data_path, file_dur, debug=0):
         self.data_path = data_path
         self._writer = None
         self.seq = 0
@@ -15,12 +15,26 @@ class G3Rotator:
         self.file_start_time = 0
         self.file_dur = file_dur
         self.cur_path = ''
+        self.debug = debug
+        self.disable = False
 
     def get_cur_path(self):
         return self.cur_path
 
     def get_session_id(self):
         return self.cur_session_id
+
+    def get_file_dur(self):
+        return self.file_dur
+
+    def set_file_dur(self, value):
+        self.file_dur = value
+
+    def get_debug(self):
+        return self.debug
+
+    def set_debug(self, debug):
+        self.debug = debug
 
     def close_writer(self):
         if self._writer is not None:
@@ -33,7 +47,7 @@ class G3Rotator:
     def new_writer(self, frame, seq):
         session_id = frame['session_id']
         stream_id = frame['sostream_id']
-        subdir = os.path.join(self.data_path, stream_id, str(session_id)[:5])
+        subdir = os.path.join(self.data_path, str(session_id)[:5], stream_id)
         fname = f"{session_id}_{seq:03}.g3"
         fpath = os.path.join(subdir, fname)
 
@@ -69,23 +83,44 @@ class G3Rotator:
         if self.cur_session_id != sess_id:
             self.close_writer()
             self.seq = 0
-            return self.new_writer(frame, self.seq)
 
+            return self.new_writer(frame, self.seq)
         elif self.new_file_condition(frame):
             self.close_writer()
             self.seq += 1
             return self.new_writer(frame, self.seq)
+        else:
+            return self._writer
 
     def __call__(self, frame):
+        if self.disable:
+            return [frame]
+
         writer = self.get_writer(frame)
         if writer is not None:
+            start = time.time()
             writer(frame)
+            stop = time.time()
+            if self.debug:
+                print(f"Wrote frame in {stop - start} sec")
+                print(frame)
         return [frame]
+
 
 class SOFileWriter(pyrogue.Device):
     def __init__(self, name, data_path, file_dur=30*60):
         pyrogue.Device.__init__(self, name=name, description="G3 File Rotator")
         self.rotator = G3Rotator(data_path, file_dur)
+
+        self.add(pyrogue.LocalVariable(
+            name="disable",
+            description="Disables G3Writer and passes frame to next module",
+            mode='RW',
+            value=False,
+            localGet=lambda: self.rotator.disable,
+            localSet=(lambda value: self.rotator.disable = value),
+        ))
+
         self.add(pyrogue.LocalVariable(
             name="filepath",
             description="Path to the current G3 file",
@@ -95,9 +130,34 @@ class SOFileWriter(pyrogue.Device):
         ))
 
         self.add(pyrogue.LocalVariable(
+            name="base_dir",
+            description="Path to the current G3 file",
+            mode='RO',
+            value=data_path,
+        ))
+
+        self.add(pyrogue.LocalVariable(
             name="session_id",
             description="Current stream session-id",
             mode='RO',
             value=0,
             localGet=self.rotator.get_session_id
+        ))
+
+        self.add(pyrogue.LocalVariable(
+            name="file_dur",
+            description="Debugs FileWriter",
+            mode='RW',
+            value=self.rotator.file_dur,
+            localSet=lambda value: self.rotator.set_file_dur(value),
+            localGet=self.rotator.get_file_dur,
+        ))
+
+        self.add(pyrogue.LocalVariable(
+            name="debug",
+            description="Dumps written frames to stdout",
+            mode='RW',
+            value=self.rotator.debug,
+            localSet=lambda value: self.rotator.set_debug(value),
+            localGet=self.rotator.get_debug,
         ))

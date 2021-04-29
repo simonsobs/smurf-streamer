@@ -13,3 +13,4 @@ ENV PYTHONPATH /usr/local/src/smurf-streamer/lib:${PYTHONPATH}
 ENV PYTHONPATH /usr/local/src/smurf-streamer/python:${PYTHONPATH}
 
 WORKDIR /usr/local/src/smurf-streamer
+ENTRYPOINT /bin/bash
