@@ -17,6 +17,9 @@
 namespace bp = boost::python;
 namespace sct = smurf::core::transmitters;
 
+using SmurfPacketRO = SmurfPacketManagerRO<ZeroCopyCreator>;
+using SmurfPacketROPtr = SmurfPacketManagerROPtr<ZeroCopyCreator>;
+
 /*
  *  Sample object passed to SmurfBuilder object
  */

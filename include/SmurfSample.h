@@ -12,6 +12,9 @@
 
 #define N_TES_BIAS 16
 
+using SmurfPacketRO = SmurfPacketManagerRO<ZeroCopyCreator>;
+using SmurfPacketROPtr = SmurfPacketManagerROPtr<ZeroCopyCreator>;
+
 class StatusSample : public G3FrameObject{
 public:
     StatusSample(): G3FrameObject(), time_(0) {}
