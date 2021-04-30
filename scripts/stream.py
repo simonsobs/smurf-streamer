@@ -46,6 +46,7 @@ def main():
     if not args.epics_prefix:
         if args.emulate:
             args.epics_prefix = f"smurf_emulator_s{slot}"
+            args.server_port = 9000 + 2*slot
         else:
             args.epics_prefix = f"smurf_server_s{slot}"
         print(f"Using epics root {args.epics_prefix}")

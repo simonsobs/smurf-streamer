@@ -36,6 +36,12 @@ class G3Rotator:
     def set_debug(self, debug):
         self.debug = debug
 
+    def get_disable(self):
+        return self.disable
+
+    def set_disable(self, value):
+        self.disable = value
+
     def close_writer(self):
         if self._writer is not None:
             self.cur_path = ''
@@ -94,6 +100,8 @@ class G3Rotator:
 
     def __call__(self, frame):
         if self.disable:
+            if self.debug:
+                print(frame)
             return [frame]
 
         writer = self.get_writer(frame)
@@ -117,8 +125,8 @@ class SOFileWriter(pyrogue.Device):
             description="Disables G3Writer and passes frame to next module",
             mode='RW',
             value=False,
-            localGet=lambda: self.rotator.disable,
-            localSet=(lambda value: self.rotator.disable = value),
+            localGet=self.rotator.get_disable,
+            localSet=(lambda value: self.rotator.set_disable(value)),
         ))
 
         self.add(pyrogue.LocalVariable(
