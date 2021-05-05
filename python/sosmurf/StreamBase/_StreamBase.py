@@ -86,6 +86,27 @@ class StreamBase(pyrogue.Device):
             description='Clears dataDrop and metaDrop counters',
             function=self._transmitter.clearCnt))
 
+        self.add(pyrogue.LocalVariable(
+            name="pysmurf_action",
+            description="Current pysmurf action",
+            mode='RW',
+            value='',
+        ))
+
+        self.add(pyrogue.LocalVariable(
+            name="pysmurf_action_timestamp",
+            description="Current pysmurf action timestamp",
+            mode='RW',
+            value=0,
+        ))
+
+        self.add(pyrogue.LocalVariable(
+            name="stream_tag",
+            description="Tag associated with data stream",
+            mode='RW',
+            value='',
+        ))
+
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
