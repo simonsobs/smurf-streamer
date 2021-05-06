@@ -61,7 +61,7 @@ def main():
 
     stream_root = sosmurf.StreamBase("SOStream", debug_meta=False,
                                      debug_data=False, agg_time=5.0)
-    file_writer = sosmurf.SOFileWriter("SOFileWriter", g3_dir, file_dur=30)
+    file_writer = sosmurf.SOFileWriter("SOFileWriter", g3_dir, file_dur=10*60)
     stream_root.add(file_writer)
 
     pipe = core.G3Pipeline()
