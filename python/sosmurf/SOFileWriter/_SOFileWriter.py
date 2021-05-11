@@ -8,6 +8,52 @@ from sosmurf.SessionManager import FlowControl
 
 class G3Rotator:
     def __init__(self, data_path, file_dur, debug=0):
+        """
+        The G3Rotator is a spt3g module like the G3Writer, but differs in that
+        it automatically determines the file-path based off of the incoming
+        data stream, and automatically rotates files once a certain duration
+        has been reached. It is a lot like the G3MultiFileWriter except more
+        specialized to work directly with the so frame stream.
+
+        On a new session with a given session_id (which will always be the int
+        timestamp when the session was started, files will be named::
+
+            path = <data_path>/str(sess_id)[:5]/<sess_id>_<seq>.g3
+
+        Because session id is the start time of the session, str(sess_id)[:5]
+        is the first 5 ctime digits, which increment in intervals of ~1 day.
+        <seq> starts at zero and increments each time the file is rotated. This
+        way all files are easily found given the session-id.
+
+        cur_path, cur_session_id, and data_path are all mapped to rogue
+        registers and can be read using pysmurf and sodetlib functions, and
+        monitored in the g3 files. ``file_dur``, ``debug``, and ``disable`` are
+        all read-write rogue variables that you can set in real time through
+        sodetlib.
+
+        Attributes:
+        -----------
+        data_path: str
+            Base directory where data will be written
+        cur_path: str
+            Path to the current file being written
+        seq: int
+            Index of the current file being written. This will increment each
+            time a new file is created for an existing streaming session. It
+            will be reset to 0 when a new streaming session starts.
+        file_start_time: float
+            Start time of the current file
+        file_dur: float
+            Duration of file before rotating
+        cur_session_id: int
+            Session id of the current data stream. 0 if there is no data
+            streaming.
+        debug: bool
+            If True, will print frames and frame write time every time a frame
+            is written
+        disable: bool
+            If true, will skip writing frames to disk.
+        """
         self.data_path = data_path
         self._writer = None
         self.seq = 0
@@ -18,6 +64,7 @@ class G3Rotator:
         self.debug = debug
         self.disable = False
 
+    # Getters and setters required for rogue variables
     def get_cur_path(self):
         return self.cur_path
 
@@ -43,6 +90,10 @@ class G3Rotator:
         self.disable = value
 
     def close_writer(self):
+        """
+        Closes the current G3Writer if open, and sets the cur_path,
+        file_start_time, and cur_session_id to the default
+        """
         if self._writer is not None:
             self.cur_path = ''
             self.file_start_time = 0
@@ -51,6 +102,18 @@ class G3Rotator:
         self._writer = None
 
     def new_writer(self, frame, seq):
+        """
+        Determines the filepath and creates a new G3Writer based on a
+        G3Frame and seq index.
+
+        Args
+        -----
+        frame: G3Frame
+            frame for which to start the new writer. This will be used to
+            dtermine the stream and session id.
+        seq: int
+            Seq index of the file in the given streaming session
+        """
         session_id = frame['session_id']
         stream_id = frame['sostream_id']
         subdir = os.path.join(self.data_path, str(session_id)[:5], stream_id)
@@ -67,7 +130,10 @@ class G3Rotator:
 
         return self._writer
 
-    def new_file_condition(self, frame):
+    def new_file_condition(self):
+        """
+        Returns true if `file_dur` sec have passed since the file_start_time.
+        """
         return time.time() > self.file_start_time + self.file_dur
 
     def get_writer(self, frame):
@@ -91,7 +157,7 @@ class G3Rotator:
             self.seq = 0
 
             return self.new_writer(frame, self.seq)
-        elif self.new_file_condition(frame):
+        elif self.new_file_condition():
             self.close_writer()
             self.seq += 1
             return self.new_writer(frame, self.seq)
