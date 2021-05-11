@@ -68,8 +68,8 @@ def main():
     pipe.Add(stream_root.builder)
     pipe.Add(sosmurf.SessionManager.SessionManager, stream_id=args.stream_id)
     # pipe.Add(sosmurf.util.stream_dumper)
-    # pipe.Add(core.G3NetworkSender, hostname='*',
-    #         port=args.stream_port, max_queue_size=1000)
+    pipe.Add(core.G3NetworkSender, hostname='*',
+             port=args.stream_port, max_queue_size=1000)
     pipe.Add(file_writer.rotator)
 
     meta_file = os.path.expandvars(cfg.get('meta_register_file'))
