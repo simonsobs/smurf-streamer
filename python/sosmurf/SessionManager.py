@@ -16,8 +16,7 @@ class FlowControl(Enum):
 
 
 class SessionManager:
-    #enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.StreamControl.EnableStreams"
-    enable_streams = "AMCc.FpgaTopLevel.AppTop.AppCore.enableStreaming"
+    enable_streams = "AMCc.SmurfProcessor.FileWriter.IsOpen"
 
     def __init__(self, stream_id=''):
         self.stream_id = stream_id
@@ -98,15 +97,7 @@ class SessionManager:
         elif frame.type == core.G3FrameType.Scan:
 
             if self.session_id is None:
-                # Returns [start, session, data]
-                session_frame = self.start_session()
-                status_frame = self.status_frame()
-                out = [
-                    self.flowcontrol_frame(FlowControl.START),
-                    session_frame,
-                    status_frame,
-                    frame
-                ]
+                return []
 
             self.tag_frame(frame)
             return out
