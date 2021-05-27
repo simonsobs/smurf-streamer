@@ -41,6 +41,7 @@ def main():
     pysmurf_common.process_args(args)
 
     print(f"Stream id: {args.stream_id}")
+    os.environ['SMURFPUB_ID'] = f"STREAMER:{args.stream_id}"
 
     # Sets some reasonable defaults
     if not args.epics_prefix:
