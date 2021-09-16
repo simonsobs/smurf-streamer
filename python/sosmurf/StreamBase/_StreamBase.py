@@ -107,6 +107,13 @@ class StreamBase(pyrogue.Device):
             value='',
         ))
 
+        self.add(pyrogue.LocalVariable(
+            name="open_g3stream",
+            description="Opens the G3 data stream",
+            mode='RW',
+            value=0,
+        ))
+
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
