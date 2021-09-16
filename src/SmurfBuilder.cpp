@@ -53,7 +53,10 @@ void SmurfBuilder::ProcessStashThread(SmurfBuilder *builder){
 }
 
 void SmurfBuilder::FlushStash(){
-    auto start = std::chrono::system_clock::now();
+    // Time points used for debugging purposes
+    std::chrono::time_point<std::chrono::system_clock>
+        start, stop, alloc_start, primary_start, copy_start, frame_start;
+    start = std::chrono::system_clock::now();
     std::lock_guard<std::mutex> read_lock(read_stash_lock_);
 
     // Swaps stashes
@@ -83,21 +86,36 @@ void SmurfBuilder::FlushStash(){
     }
 
     // Generic Timestream used to initialize real timestreams
+    if (debug_)
+        alloc_start = std::chrono::system_clock::now();
+
     G3Timestream ts_base(read_stash_.size(), NAN);
     ts_base.start = read_stash_.front()->GetTime();
     ts_base.stop = read_stash_.back()->GetTime();
 
     TimestampType timing_type = read_stash_.front()->GetTimingParadigm();
+    std::vector<G3TimestreamPtr> ts_vec;
     G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
 
     for (int i = 0; i < nchans; i++){
         G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
-        int sample=0;
-        for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-            (*ts)[sample] = (*x)->sp->getData(i);
-        }
-        data_map->insert(std::make_pair(chan_names_[i].c_str(), ts));
+        ts_vec.push_back(ts);
+        data_map->insert(std::make_pair(
+            chan_names_[i].c_str(), ts
+         ));
     }
+
+    if (debug_)
+        copy_start = std::chrono::system_clock::now();
+
+    int sample = 0;
+    for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
+        for (int i = 0; i < nchans; i++)
+            (*ts_vec[i])[sample] = (*x)->sp->getData(i);
+    }
+
+    if (debug_)
+        primary_start = std::chrono::system_clock::now();
 
     // Loades Header Data
     std::vector<std::string> primary_keys = {
@@ -112,7 +130,7 @@ void SmurfBuilder::FlushStash(){
 
     boost::shared_ptr<G3TimesampleMap> primary_map = boost::make_shared<G3TimesampleMap>();
 
-    int sample = 0;
+    sample = 0;
     for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
         auto hdr = (*x)->sp->getHeader();
 
@@ -149,6 +167,7 @@ void SmurfBuilder::FlushStash(){
     slow_primary_map->insert(std::make_pair("SlotNumber", hdr->getSlotNumber()));
     slow_primary_map->insert(std::make_pair("TimingConfiguration", hdr->getTimingConfiguration()));
 
+
     // Loads TES Biases
     G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
     for (int i = 0; i < N_TES_BIAS; i++){
@@ -159,6 +178,9 @@ void SmurfBuilder::FlushStash(){
         }
         tes_bias_map->insert(std::make_pair(bias_keys_[i].c_str(), ts));
     }
+
+    if (debug_)
+        frame_start = std::chrono::system_clock::now();
 
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
     frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
@@ -178,8 +200,11 @@ void SmurfBuilder::FlushStash(){
     auto end = std::chrono::system_clock::now();
     if (debug_){
         printf("Frame Out (%d channels, %lu samples)\n", nchans, data_map->NSamples());
-        long flush_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        printf("Flushed in %ld ms\n", flush_time);
+        printf("Total Time: %ld ms\n", (end - start).count()/1000000);
+        printf("- Alloc Time: %ld ms\n", (copy_start - alloc_start).count()/1000000);
+        printf("- Copy Time: %ld ms\n", (primary_start - copy_start).count()/1000000);
+        printf("- Primary Time: %ld ms\n", (frame_start - primary_start).count()/1000000);
+        printf("- Frame Time: %ld ms\n", (end - frame_start).count()/1000000);
         printf("%lu elements in queue...\n", queue_.size());
     }
 }
