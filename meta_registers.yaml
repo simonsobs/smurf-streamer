@@ -4,41 +4,43 @@
 # iteration.
 #
 # Register values should be the bitwise | of their variable groups, with:
-#     stream (Sent in metadata stream):  1
-#     publish (Sent to pysmurf publisher): 2
+#   stream (Sent in metadata stream):  1
+#   publish (Sent to pysmurf publisher): 2
 #
 # If you want to set a polling interval, the value should be a list
 # [groups, poll_interval]
 ################################################################################
 root.RogueVersion: 3
 root.RogueDirectory: 3
-root.SmurfApplication: 3
-root.FpgaTopLevel:
-    AppTop.AppCore:
-        enableStreaming: 3
-        SysgenCryo.Base[{{range(8)}}]:
-            band: 1
-            bandCenterMHz: 1
-            toneFrequencyOffsetMHz: 1
-            CryoChannels:
-                centerFrequencyArray: 1
-                amplitudeScaleArray: 1
-                etaMagArray: 1
-                etaPhaseArray: 1
-        RtmCryoDet:
-            RampMaxCnt: 1
-            EnableRampTrigger: 1
-    AmcCarrierCore.AxiVersion:
-        Temperature: 1
+root.FpgaTopLevel.AppTop.AppCore:
+    enableStreaming: 3
+    SysgenCryo:
+      tuneFilePath: 3
+      Base[{{range(8)}}]:
+        band: 1
+        ScratchPad: 3
+        bandCenterMHz: 1
+        toneFrequencyOffsetMHz: 1
+        CryoChannels:
+            centerFrequencyArray: 1
+            amplitudeScaleArray: 1
+            etaMagArray: 1
+            etaPhaseArray: 1
+    RtmCryoDet:
+        RampMaxCnt: 1
+        EnableRampTrigger: 1
+root.FpgaTopLevel.AmcCarrierCore.AxiSysMonUltraScale:
+    Temperature: [3, 1]
 root.SmurfProcessor:
-    FrameRxStats:
-        FrameLossCnt: 3
-        FrameOutOrderCnt: 3
     ChannelMapper:
         NumChannels: 1
         PayloadSize: 1
-        Mask: 1
-    Filter:
+        Mask: [1, 10]
+    FrameRxStats:
+        FrameLossCnt: 3
+        FrameOutOrderCnt: 3
+        BadFrameCnt: 3
+    Filter: 
         Disable: 1
         Order: 1
         Gain: 1
@@ -53,6 +55,16 @@ root.SmurfProcessor:
         Amplitude: 1
         Offset: 1
         Period: 1
+    FileWriter:
+        IsOpen: [3, 5]
+        DataFile: 3
+    BandPhaseFeedback[{{range(8)}}]:
+        Tau: 1
+        Theta: 1
     SOStream:
         dataDropCnt: 3
         metaDropCnt: 3
+        pysmurf_action: 3
+        pysmurf_action_timestamp: 3
+        stream_tag: 3
+        open_g3stream: 3

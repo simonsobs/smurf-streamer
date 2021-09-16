@@ -73,11 +73,15 @@ def main():
              port=args.stream_port, max_queue_size=1000)
     pipe.Add(file_writer.rotator)
 
-    meta_file = os.path.expandvars(cfg.get('meta_register_file'))
     vgs = None
-    if meta_file is not None:
-        print(f"Loading metadata registers from {meta_file}...")
-        vgs = sosmurf.util.VariableGroups.from_file(meta_file)
+    default_meta_file = '/usr/local/src/smurf-streamer/meta_registers.yaml'
+    meta_file = cfg.get('meta_register_file')
+    if os.path.exists(default_meta_file):
+        vgs = sosmurf.util.VariableGroups.from_file(default_meta_file)
+    if meta_file is not None and vgs is not None:
+        vgs.update(sosmurf.util.VariableGroups.from_file(
+            os.path.expandvars(meta_file)
+        ))
 
     pcie_kwargs = {
         'lane': args.pcie_rssi_lane, 'ip_addr': args.ip_addr,

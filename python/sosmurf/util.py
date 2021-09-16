@@ -142,6 +142,12 @@ class VariableGroups:
             data = yaml.safe_load(f)
         return cls(data)
 
+    def update(self, vgs):
+        """
+        Updates data dict with that of another VariableGroups object
+        """
+        self.data.update(vgs.data)
+
     def template(self):
         def helper(data):
             rv = {}
