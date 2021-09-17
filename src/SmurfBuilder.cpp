@@ -52,14 +52,136 @@ void SmurfBuilder::ProcessStashThread(SmurfBuilder *builder){
     }
 }
 
-void SmurfBuilder::FlushStash(){
+G3FramePtr SmurfBuilder::FrameFromSamples(
+        std::deque<SmurfSampleConstPtr>::iterator start,
+        std::deque<SmurfSampleConstPtr>::iterator stop){
     // Time points used for debugging purposes
     std::chrono::time_point<std::chrono::system_clock>
-        start, stop, alloc_start, primary_start, copy_start, frame_start;
-    start = std::chrono::system_clock::now();
-    std::lock_guard<std::mutex> read_lock(read_stash_lock_);
+        start_time, stop_time, alloc_start, copy_start, frame_start;
+    start_time = std::chrono::system_clock::now();
 
+    int nchans = (*start)->sp->getHeader()->getNumberChannels();
+    int nsamps = stop - start;
+
+    // Creates channel names if needed
+    if (nchans > chan_names_.size()){
+        char name[10];
+         for (int i = chan_names_.size(); i < nchans; i++){
+            sprintf(name, "r%04d", i);
+            chan_names_.push_back(name);
+        }
+    }
+
+    if (debug_)
+        alloc_start = std::chrono::system_clock::now();
+
+    // Initialize detector timestreams
+    G3Timestream ts_base(nsamps, NAN);
+    ts_base.start = (*start)->GetTime();
+    ts_base.stop = (*(stop-1))->GetTime();
+    TimestampType timing_type = (*start)->GetTimingParadigm();
+
+    std::vector<G3TimestreamPtr> ts_vec;
+    G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
+    for (int i = 0; i < nchans; i++){
+        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
+        ts_vec.push_back(ts);
+        data_map->insert(std::make_pair(
+            chan_names_[i].c_str(), ts
+         ));
+    }
+
+    // Initialize TES Biases
+    std::vector<G3TimestreamPtr> tes_bias_vec;
+    G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
+    for (int i = 0; i < N_TES_BIAS; i++){
+        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
+        tes_bias_vec.push_back(ts);
+        tes_bias_map->insert(std::make_pair(bias_keys_[i].c_str(), ts));
+    }
+
+    // Initialize Primary data
+    std::vector<std::string> primary_keys = {
+        "UnixTime", "FluxRampIncrement", "FluxRampOffset", "Counter0",
+        "Counter1", "Counter2", "AveragingResetBits", "FrameCounter",
+        "TESRelaySetting"
+    };
+    std::vector<G3VectorIntPtr> primary_vec;
+    boost::shared_ptr<G3TimesampleMap> primary_map = boost::make_shared<G3TimesampleMap>();
+    int i = 0;
+    for (auto key : primary_keys){
+        G3VectorIntPtr prim = G3VectorIntPtr(new G3VectorInt(nsamps, 0));
+        primary_vec.push_back(prim);
+        primary_map->insert(std::make_pair(key, prim));
+    }
+    G3VectorTime sample_times = G3VectorTime(nsamps);
+
+    if (debug_)
+        copy_start = std::chrono::system_clock::now();
+
+    // Read data in to G3 Objects
+    int sample = 0;
+    for (auto it = start; it != stop; it++, sample++){
+        sample_times[sample] = (*it)->GetTime();
+        auto hdr = (*it)->sp->getHeader();
+
+        (*primary_vec[0])[sample] = hdr->getUnixTime();
+        (*primary_vec[1])[sample] = hdr->getFluxRampIncrement();
+        (*primary_vec[2])[sample] = hdr->getFluxRampOffset();
+        (*primary_vec[3])[sample] = hdr->getCounter0();
+        (*primary_vec[4])[sample] = hdr->getCounter1();
+        (*primary_vec[5])[sample] = hdr->getCounter2();
+        (*primary_vec[6])[sample] = hdr->getAveragingResetBits();
+        (*primary_vec[7])[sample] = hdr->getFrameCounter();
+        (*primary_vec[8])[sample] = hdr->getTESRelaySetting();
+
+        for (int i = 0; i < N_TES_BIAS; i++)
+            (*tes_bias_vec[i])[sample] = hdr->getTESBias(i);
+
+        for (int i = 0; i < nchans; i++)
+            (*ts_vec[i])[sample] = (*it)->sp->getData(i);
+    }
+
+    // Slow primary map
+    G3MapIntPtr slow_primary_map = G3MapIntPtr(new G3MapInt);
+    auto hdr = (*start)->sp->getHeader();
+    slow_primary_map->insert(std::make_pair("Version", hdr->getVersion()));
+    slow_primary_map->insert(std::make_pair("CrateID", hdr->getCrateID()));
+    slow_primary_map->insert(std::make_pair("SlotNumber", hdr->getSlotNumber()));
+    slow_primary_map->insert(std::make_pair("TimingConfiguration", hdr->getTimingConfiguration()));
+
+    if (debug_)
+        frame_start = std::chrono::system_clock::now();
+
+    // Create and return G3Frame
+    G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
+    frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
+    frame->Put("timing_paradigm",
+               boost::make_shared<G3String>(TimestampTypeStrings[timing_type])
+    );
+    frame->Put("data", data_map);
+    frame->Put("tes_biases", tes_bias_map);
+    frame->Put("num_samples", boost::make_shared<G3Int>(data_map->NSamples()));
+
+    frame->Put("primary", primary_map);
+    frame->Put("slow_primary", slow_primary_map);
+
+    stop_time = std::chrono::system_clock::now();
+    if (debug_){
+        printf("Frame Out (%d channels, %lu samples)\n", nchans, data_map->NSamples());
+        printf("Total Time: %ld ms\n", (stop_time - start_time).count()/1000000);
+        printf(" - Alloc Time: %ld ms\n", (copy_start - alloc_start).count()/1000000);
+        printf(" - Copy Time: %ld ms\n", (frame_start - copy_start).count()/1000000);
+        printf(" - Frame Time: %ld ms\n", (stop_time - frame_start).count()/1000000);
+        printf("%lu elements in queue...\n", queue_.size());
+    }
+
+    return frame;
+}
+
+void SmurfBuilder::FlushStash(){
     // Swaps stashes
+    std::lock_guard<std::mutex> read_lock(read_stash_lock_);
     {
         std::lock_guard<std::mutex> write_lock(write_stash_lock_);
         write_stash_.swap(read_stash_);
@@ -73,140 +195,24 @@ void SmurfBuilder::FlushStash(){
         return;
     }
 
-    int nchans = read_stash_.front()->sp->getHeader()->getNumberChannels();
-    int nsamps = read_stash_.size();
-
-    // Creates channel names
-    if (nchans > chan_names_.size()){
-        char name[10];
-         for (int i = chan_names_.size(); i < nchans; i++){
-            sprintf(name, "r%04d", i);
-            chan_names_.push_back(name);
+    auto start = read_stash_.begin();
+    auto stop = read_stash_.begin();
+    int nchans = (*start)->sp->getHeader()->getNumberChannels();
+    while(true){
+        stop += 1;
+        if (stop == read_stash_.end()){
+            FrameOut(FrameFromSamples(start, stop));
+            break;
+        }
+        int stop_nchans = (*stop)->sp->getHeader()->getNumberChannels();
+        if (stop_nchans != nchans){
+            printf("NumChannels has changed from %d to %d!!", nchans, stop_nchans);
+            FrameOut(FrameFromSamples(start, stop));
+            start = stop;
+            nchans = stop_nchans;
         }
     }
-
-    // Generic Timestream used to initialize real timestreams
-    if (debug_)
-        alloc_start = std::chrono::system_clock::now();
-
-    G3Timestream ts_base(read_stash_.size(), NAN);
-    ts_base.start = read_stash_.front()->GetTime();
-    ts_base.stop = read_stash_.back()->GetTime();
-
-    TimestampType timing_type = read_stash_.front()->GetTimingParadigm();
-    std::vector<G3TimestreamPtr> ts_vec;
-    G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
-
-    for (int i = 0; i < nchans; i++){
-        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
-        ts_vec.push_back(ts);
-        data_map->insert(std::make_pair(
-            chan_names_[i].c_str(), ts
-         ));
-    }
-
-    if (debug_)
-        copy_start = std::chrono::system_clock::now();
-
-    int sample = 0;
-    for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-        for (int i = 0; i < nchans; i++)
-            (*ts_vec[i])[sample] = (*x)->sp->getData(i);
-    }
-
-    if (debug_)
-        primary_start = std::chrono::system_clock::now();
-
-    // Loades Header Data
-    std::vector<std::string> primary_keys = {
-        "UnixTime", "FluxRampIncrement", "FluxRampOffset", "Counter0",
-        "Counter1", "Counter2", "AveragingResetBits", "FrameCounter",
-        "TESRelaySetting"
-    };
-    std::vector<G3VectorIntPtr> primary_vec;
-    G3VectorTime sample_times = G3VectorTime(nsamps);
-    for (auto key : primary_keys)
-        primary_vec.push_back(G3VectorIntPtr(new G3VectorInt(nsamps, 0)));
-
-    boost::shared_ptr<G3TimesampleMap> primary_map = boost::make_shared<G3TimesampleMap>();
-
-    sample = 0;
-    for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-        auto hdr = (*x)->sp->getHeader();
-
-        sample_times[sample] = (*x)->GetTime();
-
-        (*primary_vec[0])[sample] = hdr->getUnixTime();
-        (*primary_vec[1])[sample] = hdr->getFluxRampIncrement();
-        (*primary_vec[2])[sample] = hdr->getFluxRampOffset();
-        (*primary_vec[3])[sample] = hdr->getCounter0();
-        (*primary_vec[4])[sample] = hdr->getCounter1();
-        (*primary_vec[5])[sample] = hdr->getCounter2();
-        (*primary_vec[6])[sample] = hdr->getAveragingResetBits();
-        (*primary_vec[7])[sample] = hdr->getFrameCounter();
-        (*primary_vec[8])[sample] = hdr->getTESRelaySetting();
-    }
-
-    primary_map->times = sample_times;
-
-    int i = 0;
-    for (auto key : primary_keys){
-        primary_map->insert(std::make_pair(key, primary_vec[i]));
-        i++;
-    }
-
-    if (!primary_map->Check()){
-        printf("Primary Timesample Map failed it's check!\n");
-    }
-
-    // Slow primary map
-    G3MapIntPtr slow_primary_map = G3MapIntPtr(new G3MapInt);
-    auto hdr = read_stash_.front()->sp->getHeader();
-    slow_primary_map->insert(std::make_pair("Version", hdr->getVersion()));
-    slow_primary_map->insert(std::make_pair("CrateID", hdr->getCrateID()));
-    slow_primary_map->insert(std::make_pair("SlotNumber", hdr->getSlotNumber()));
-    slow_primary_map->insert(std::make_pair("TimingConfiguration", hdr->getTimingConfiguration()));
-
-
-    // Loads TES Biases
-    G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
-    for (int i = 0; i < N_TES_BIAS; i++){
-        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
-        int sample = 0;
-        for (auto x = read_stash_.begin(); x != read_stash_.end(); x++, sample++){
-            (*ts)[sample] = (*x)->sp->getHeader()->getTESBias(i);
-        }
-        tes_bias_map->insert(std::make_pair(bias_keys_[i].c_str(), ts));
-    }
-
-    if (debug_)
-        frame_start = std::chrono::system_clock::now();
-
-    G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
-    frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
-    frame->Put("timing_paradigm",
-               boost::make_shared<G3String>(TimestampTypeStrings[timing_type])
-    );
-    frame->Put("data", data_map);
-    frame->Put("tes_biases", tes_bias_map);
-    frame->Put("num_samples", boost::make_shared<G3Int>(data_map->NSamples()));
-
-    frame->Put("primary", primary_map);
-    frame->Put("slow_primary", slow_primary_map);
-
     read_stash_.clear();
-    FrameOut(frame);
-
-    auto end = std::chrono::system_clock::now();
-    if (debug_){
-        printf("Frame Out (%d channels, %lu samples)\n", nchans, data_map->NSamples());
-        printf("Total Time: %ld ms\n", (end - start).count()/1000000);
-        printf("- Alloc Time: %ld ms\n", (copy_start - alloc_start).count()/1000000);
-        printf("- Copy Time: %ld ms\n", (primary_start - copy_start).count()/1000000);
-        printf("- Primary Time: %ld ms\n", (frame_start - primary_start).count()/1000000);
-        printf("- Frame Time: %ld ms\n", (end - frame_start).count()/1000000);
-        printf("%lu elements in queue...\n", queue_.size());
-    }
 }
 
 void SmurfBuilder::ProcessNewData(){
@@ -231,18 +237,8 @@ void SmurfBuilder::ProcessNewData(){
 
         FrameOut(frame);
     }
-    else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
-        auto hdr = data_pkt->sp->getHeader();
-        if (num_channels_ == 0){
-            num_channels_ = hdr->getNumberChannels();
-        }
-        else if (hdr->getNumberChannels() != num_channels_){
-            printf("num_channels has changed from %d to %d! Flushing stash...\n",
-                    num_channels_, hdr->getNumberChannels());
-            FlushStash();
-            num_channels_ = hdr->getNumberChannels();
-        }
 
+    else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
         std::lock_guard<std::mutex> lock(write_stash_lock_);
         write_stash_.push_back(data_pkt);
     }
