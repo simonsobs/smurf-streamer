@@ -24,6 +24,10 @@ public:
 
     static void setup_python();
 
+    G3FramePtr FrameFromSamples(
+            std::deque<SmurfSampleConstPtr>::iterator start,
+            std::deque<SmurfSampleConstPtr>::iterator stop);
+
     float agg_duration_; // Aggregation duration in seconds
     void SetAggDuration(float dur){ agg_duration_ = dur;};
     const float GetAggDuration(){ return agg_duration_; };
