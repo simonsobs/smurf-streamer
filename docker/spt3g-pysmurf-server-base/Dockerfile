@@ -5,7 +5,7 @@ WORKDIR /usr/local/src
 ENV TZ=Etc/UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update
+RUN apt-get update --fix-missing
 
 RUN apt-get install -y \
     libflac-dev \
@@ -16,6 +16,7 @@ RUN apt-get install -y \
     environment-modules \
     gdb \
     rsync \
+    libopenblas-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/CMB-S4/spt3g_software.git
@@ -29,3 +30,24 @@ RUN cd spt3g_software \
 ENV SPT3G_SOFTWARE_PATH /usr/local/src/spt3g_software
 ENV SPT3G_SOFTWARE_BUILD_PATH /usr/local/src/spt3g_software/build
 ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
+
+# SO3G install
+WORKDIR /usr/local/src
+RUN git clone https://github.com/simonsobs/so3g.git -b super-timestream
+ENV LANG C.UTF-8
+WORKDIR /usr/local/src/so3g
+
+RUN apt update && apt install -y \
+    build-essential \
+    automake \
+    gfortran 
+
+
+RUN pip3 install -r requirements.txt
+RUN mkdir -p build \
+    && cd build \
+    && cmake .. -DCMAKE_PREFIX_PATH=$SPT3G_SOFTWARE_BUILD_PATH \
+    && make -j 16 \
+    && make install
+
+env SO3G_DIR /usr/local/src/so3g
