@@ -34,6 +34,7 @@ public:
 
     void       setDebug(bool d) { debug_ = d;    };
     const bool getDebug()       { return debug_; };
+    void test(int a, int b, int c);
 
 protected:
     void ProcessNewData();

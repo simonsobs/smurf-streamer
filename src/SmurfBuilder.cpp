@@ -1,15 +1,22 @@
 #include "SmurfBuilder.h"
+#include "numpy/arrayobject.h"
 
 #include <G3Frame.h>
 #include <G3Data.h>
 #include <G3Timestream.h>
 #include <G3Map.h>
 #include <G3Timesample.h>
+#include <G3SuperTimestream.h>
+
+#include <pybindings.h>
+#include <boost/python.hpp>
+#include <container_pybindings.h>
 
 #include <chrono>
 #include <string>
 #include <thread>
 #include <inttypes.h>
+#include "so3g_numpy.h"
 
 
 namespace bp = boost::python;
@@ -75,45 +82,38 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     if (debug_)
         alloc_start = std::chrono::system_clock::now();
 
-    // Initialize detector timestreams
-    G3Timestream ts_base(nsamps, NAN);
-    ts_base.start = (*start)->GetTime();
-    ts_base.stop = (*(stop-1))->GetTime();
     TimestampType timing_type = (*start)->GetTimingParadigm();
 
-    std::vector<G3TimestreamPtr> ts_vec;
-    G3TimestreamMapPtr data_map = G3TimestreamMapPtr(new G3TimestreamMap);
+    // Initialize detector timestreams
+    int32_t data_buffer[nchans*nsamps];
+    int data_shape[2] = {nchans, nsamps};
+    auto data_ts = G3SuperTimestreamPtr(new G3SuperTimestream());
+    data_ts->names = G3VectorString();
     for (int i = 0; i < nchans; i++){
-        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
-        ts_vec.push_back(ts);
-        data_map->insert(std::make_pair(
-            chan_names_[i].c_str(), ts
-         ));
+        data_ts->names.push_back(chan_names_[i]);
     }
 
-    // Initialize TES Biases
-    std::vector<G3TimestreamPtr> tes_bias_vec;
-    G3TimestreamMapPtr tes_bias_map = G3TimestreamMapPtr(new G3TimestreamMap);
+    int32_t tes_buffer[N_TES_BIAS*nsamps];
+    int tes_shape[2] = {N_TES_BIAS, nsamps};
+    auto tes_ts = G3SuperTimestreamPtr(new G3SuperTimestream());
+    tes_ts->names = G3VectorString();
     for (int i = 0; i < N_TES_BIAS; i++){
-        G3TimestreamPtr ts = G3TimestreamPtr(new G3Timestream(ts_base));
-        tes_bias_vec.push_back(ts);
-        tes_bias_map->insert(std::make_pair(bias_keys_[i].c_str(), ts));
+        tes_ts->names.push_back(bias_keys_[i]);
     }
 
-    // Initialize Primary data
     std::vector<std::string> primary_keys = {
         "UnixTime", "FluxRampIncrement", "FluxRampOffset", "Counter0",
         "Counter1", "Counter2", "AveragingResetBits", "FrameCounter",
         "TESRelaySetting"
     };
-    std::vector<G3VectorIntPtr> primary_vec;
-    boost::shared_ptr<G3TimesampleMap> primary_map = boost::make_shared<G3TimesampleMap>();
-    int i = 0;
-    for (auto key : primary_keys){
-        G3VectorIntPtr prim = G3VectorIntPtr(new G3VectorInt(nsamps, 0));
-        primary_vec.push_back(prim);
-        primary_map->insert(std::make_pair(key, prim));
-    }
+    int num_keys = primary_keys.size();
+    int64_t primary_buffer[num_keys*nsamps];
+    int primary_shape[2] = {num_keys, nsamps};
+    auto primary_ts = G3SuperTimestreamPtr(new G3SuperTimestream());
+    primary_ts->names = G3VectorString();
+    for (auto name : primary_keys)
+        primary_ts->names.push_back(name);
+    
     G3VectorTime sample_times = G3VectorTime(nsamps);
 
     if (debug_)
@@ -123,24 +123,36 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     int sample = 0;
     for (auto it = start; it != stop; it++, sample++){
         sample_times[sample] = (*it)->GetTime();
-        auto hdr = (*it)->sp->getHeader();
 
-        (*primary_vec[0])[sample] = hdr->getUnixTime();
-        (*primary_vec[1])[sample] = hdr->getFluxRampIncrement();
-        (*primary_vec[2])[sample] = hdr->getFluxRampOffset();
-        (*primary_vec[3])[sample] = hdr->getCounter0();
-        (*primary_vec[4])[sample] = hdr->getCounter1();
-        (*primary_vec[5])[sample] = hdr->getCounter2();
-        (*primary_vec[6])[sample] = hdr->getAveragingResetBits();
-        (*primary_vec[7])[sample] = hdr->getFrameCounter();
-        (*primary_vec[8])[sample] = hdr->getTESRelaySetting();
+        auto hdr = (*it)->sp->getHeader();
+        primary_buffer[0 + num_keys*sample] = hdr->getUnixTime();
+        primary_buffer[1 + num_keys*sample] = hdr->getFluxRampIncrement();
+        primary_buffer[2 + num_keys*sample] = hdr->getFluxRampOffset();
+        primary_buffer[3 + num_keys*sample] = hdr->getCounter0();
+        primary_buffer[4 + num_keys*sample] = hdr->getCounter1();
+        primary_buffer[5 + num_keys*sample] = hdr->getCounter2();
+        primary_buffer[6 + num_keys*sample] = hdr->getAveragingResetBits();
+        primary_buffer[7 + num_keys*sample] = hdr->getFrameCounter();
+        primary_buffer[8 + num_keys*sample] = hdr->getTESRelaySetting();
 
         for (int i = 0; i < N_TES_BIAS; i++)
-            (*tes_bias_vec[i])[sample] = hdr->getTESBias(i);
+            tes_buffer[i + N_TES_BIAS*sample] = hdr->getTESBias(i);
 
         for (int i = 0; i < nchans; i++)
-            (*ts_vec[i])[sample] = (*it)->sp->getData(i);
+            data_buffer[i + nchans * sample] = (*it)->sp->getData(i);
     }
+
+    data_ts->times = sample_times;
+    data_ts->SetDataFromBuffer((void*)data_buffer, 2, data_shape, NPY_INT32,
+            std::pair<int,int>(0, nsamps));
+
+    tes_ts->times = G3VectorTime(sample_times);
+    tes_ts->SetDataFromBuffer((void*)tes_buffer, 2, tes_shape, NPY_INT32,
+            std::pair<int,int>(0, nsamps));
+
+    primary_ts->times = G3VectorTime(sample_times);
+    primary_ts->SetDataFromBuffer((void*)primary_buffer, 2, primary_shape,
+            NPY_INT64, std::pair<int,int>(0, nsamps));
 
     // Slow primary map
     G3MapIntPtr slow_primary_map = G3MapIntPtr(new G3MapInt);
@@ -159,16 +171,16 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     frame->Put("timing_paradigm",
                boost::make_shared<G3String>(TimestampTypeStrings[timing_type])
     );
-    frame->Put("data", data_map);
-    frame->Put("tes_biases", tes_bias_map);
-    frame->Put("num_samples", boost::make_shared<G3Int>(data_map->NSamples()));
+    frame->Put("data", data_ts);
+    frame->Put("tes_biases", tes_ts);
+    frame->Put("num_samples", boost::make_shared<G3Int>(nsamps));
 
-    frame->Put("primary", primary_map);
+    frame->Put("primary", primary_ts);
     frame->Put("slow_primary", slow_primary_map);
 
     stop_time = std::chrono::system_clock::now();
     if (debug_){
-        printf("Frame Out (%d channels, %lu samples)\n", nchans, data_map->NSamples());
+        printf("Frame Out (%d channels, %d samples)\n", nchans, nsamps);
         printf("Total Time: %ld ms\n", (stop_time - start_time).count()/1000000);
         printf(" - Alloc Time: %ld ms\n", (copy_start - alloc_start).count()/1000000);
         printf(" - Copy Time: %ld ms\n", (frame_start - copy_start).count()/1000000);
@@ -244,6 +256,24 @@ void SmurfBuilder::ProcessNewData(){
     }
 }
 
+void SmurfBuilder::test(int nsamps, int first, int second){
+	int shape[2] = {3, nsamps};
+	int typenum = NPY_INT32;
+	int32_t buf[shape[0] * shape[1]] = {0};
+
+	auto ts = G3SuperTimestreamPtr(new G3SuperTimestream());
+	const char *chans[] = {"a", "b", "c"};
+	ts->names = G3VectorString(chans, std::end(chans));
+	ts->times = G3VectorTime();
+	for (int i=first; i<second; i++) {
+		ts->times.push_back(G3Time::Now());
+		buf[i] = 77;
+	}
+	ts->SetDataFromBuffer((void*)buf, 2, shape, typenum,
+			      std::pair<int,int>(first, second));
+
+}
+
 void SmurfBuilder::setup_python(){
 
     bp::class_< SmurfBuilder, bp::bases<G3EventBuilder>,
@@ -256,6 +286,7 @@ void SmurfBuilder::setup_python(){
     .def("SetAggDuration", &SmurfBuilder::SetAggDuration)
     .def("getDebug", &SmurfBuilder::getDebug)
     .def("setDebug", &SmurfBuilder::setDebug)
+    .def("test", &SmurfBuilder::test)
     ;
 
     bp::implicitly_convertible<SmurfBuilderPtr, G3ModulePtr>();
