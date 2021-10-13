@@ -34,7 +34,21 @@ public:
 
     void       setDebug(bool d) { debug_ = d;    };
     const bool getDebug()       { return debug_; };
-    void test(int a, int b, int c);
+
+    void setEncode(bool b) { encode_timestreams_ = b; };
+    const bool getEncode() {return encode_timestreams_;};
+
+    void setDataEncodeAlgo(int algo);
+    const int getDataEncodeAlgo();
+
+    void setPrimaryEncodeAlgo(int algo);
+    const int getPrimaryEncodeAlgo();
+
+    void setTesBiasEncodeAlgo(int algo);
+    const int getTesBiasEncodeAlgo();
+
+    void setTimeEncodeAlgo(int algo);
+    const int getTimeEncodeAlgo();
 
 protected:
     void ProcessNewData();
@@ -55,8 +69,20 @@ private:
     // Calls FlushStash every agg_duration_ seconds
     static void ProcessStashThread(SmurfBuilder *);
 
+    // Sets SuperTimestream encoding algorithms:
+    //   - 0: No compression
+    //   - 1: FLAC only
+    //   - 2: bzip only
+    //   - 3: FLAC + bzip
+    // See So3G docs for more info.
+    int data_encode_algo_;
+    int primary_encode_algo_;
+    int tes_bias_encode_algo_;
+    int time_encode_algo_;
+
     bool running_;
     bool debug_;
+    bool encode_timestreams_;
 
     std::thread process_stash_thread_;
 

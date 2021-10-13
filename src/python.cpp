@@ -12,8 +12,6 @@ static void* _sosmurf_import_array() {
 }
 
 BOOST_PYTHON_MODULE(sosmurfcore){
-    // _so3g_import_array();
-    
     bp::import("rogue");
     bp::import("spt3g.core");
 
