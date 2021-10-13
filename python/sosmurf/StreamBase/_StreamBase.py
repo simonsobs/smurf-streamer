@@ -8,7 +8,10 @@ class StreamBase(pyrogue.Device):
     """
         Stream Base pyrogue object.
     """
-    def __init__(self, name, debug_data=False, debug_meta=False, debug_builder=False, agg_time=1.0, **kwargs):
+    def __init__(self, name, debug_data=False, debug_meta=False,
+                 debug_builder=False, agg_time=1.0, builder_encode=False,
+                 data_algo=0, tes_bias_algo=0, primary_algo=0, time_algo=0,
+                 **kwargs):
         pyrogue.Device.__init__(self, name=name, description='SMuRF Data CustomTransmitter', **kwargs)
 
         self.builder = sosmurfcore.SmurfBuilder()
@@ -40,6 +43,46 @@ class StreamBase(pyrogue.Device):
             value=debug_builder,
             localSet=lambda value: self.builder.setDebug(value),
             localGet=self.builder.getDebug))
+
+        self.add(pyrogue.LocalVariable(
+            name='BuilderEncode',
+            description='Set the debug mode for the Smurfbuilder',
+            mode='RW',
+            value=builder_encode,
+            localSet=lambda value: self.builder.setEncode(value),
+            localGet=self.builder.getEncode))
+
+        self.add(pyrogue.LocalVariable(
+            name='DataEncodeAlgo',
+            description='Sets the algorithm used to compress data timestreams',
+            mode='RW',
+            value=data_algo,
+            localSet=lambda value: self.builder.setDataEncodeAlgo(value),
+            localGet=self.builder.getDataEncodeAlgo))
+
+        self.add(pyrogue.LocalVariable(
+            name='PrimaryEncodeAlgo',
+            description='Sets the algorithm used to compress primary timestreams',
+            mode='RW',
+            value=primary_algo,
+            localSet=lambda value: self.builder.setPrimaryEncodeAlgo(value),
+            localGet=self.builder.getPrimaryEncodeAlgo))
+
+        self.add(pyrogue.LocalVariable(
+            name='TesBiasEncodeAlgo',
+            description='Sets the algorithm used to compress tes bias timestreams',
+            mode='RW',
+            value=tes_bias_algo,
+            localSet=lambda value: self.builder.setTesBiasEncodeAlgo(value),
+            localGet=self.builder.getTesBiasEncodeAlgo))
+
+        self.add(pyrogue.LocalVariable(
+            name='TimeEncodeAlgo',
+            description='Sets the algorithm used to compress the time fields of all timestreams',
+            mode='RW',
+            value=time_algo,
+            localSet=lambda value: self.builder.setTimeEncodeAlgo(value),
+            localGet=self.builder.getTimeEncodeAlgo))
 
         self.add(pyrogue.LocalVariable(
             name='AggTime',
@@ -113,7 +156,6 @@ class StreamBase(pyrogue.Device):
             mode='RW',
             value=0,
         ))
-
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
