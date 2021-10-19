@@ -5,18 +5,20 @@ WORKDIR /usr/local/src
 ENV TZ=Etc/UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update --fix-missing
-
-RUN apt-get install -y \
-    libflac-dev \
-    libnetcdf-dev \
-    libfftw3-dev \
-    libgsl0-dev \
-    tcl \
-    environment-modules \
-    gdb \
-    rsync \
-    libopenblas-dev \
+RUN apt-get update --fix-missing \
+    && apt-get install -y \
+        libflac-dev \
+        libnetcdf-dev \
+        libfftw3-dev \
+        libgsl0-dev \
+        tcl \
+        environment-modules \
+        gdb \
+        rsync \
+        libopenblas-dev \
+        build-essential \
+        automake \
+        gfortran \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/CMB-S4/spt3g_software.git
@@ -36,12 +38,6 @@ WORKDIR /usr/local/src
 RUN git clone https://github.com/simonsobs/so3g.git -b super-timestream
 ENV LANG C.UTF-8
 WORKDIR /usr/local/src/so3g
-
-RUN apt update && apt install -y \
-    build-essential \
-    automake \
-    gfortran 
-
 
 RUN pip3 install -r requirements.txt
 RUN mkdir -p build \

@@ -39,16 +39,16 @@ public:
     const bool getEncode() {return encode_timestreams_;};
 
     void setDataEncodeAlgo(int algo);
-    const int getDataEncodeAlgo();
+    int getDataEncodeAlgo() const;
 
     void setPrimaryEncodeAlgo(int algo);
-    const int getPrimaryEncodeAlgo();
+    int getPrimaryEncodeAlgo() const;
 
     void setTesBiasEncodeAlgo(int algo);
-    const int getTesBiasEncodeAlgo();
+    int getTesBiasEncodeAlgo() const;
 
     void setTimeEncodeAlgo(int algo);
-    const int getTimeEncodeAlgo();
+    int getTimeEncodeAlgo() const;
 
 protected:
     void ProcessNewData();
