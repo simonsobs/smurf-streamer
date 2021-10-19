@@ -1,9 +1,7 @@
 #include "SmurfTransmitter.h"
 #include "SmurfBuilder.h"
+#include "so3g_numpy.h"
 
-#define PY_ARRAY_UNIQUE_SYMBOL Py_Array_API_SO3G
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 namespace bp = boost::python;
 
 static void* _sosmurf_import_array() {
