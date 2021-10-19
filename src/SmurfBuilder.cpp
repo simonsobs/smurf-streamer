@@ -1,12 +1,11 @@
+#define NO_IMPORT_ARRAY
 #include "SmurfBuilder.h"
-#include "numpy/arrayobject.h"
 
 #include <G3Frame.h>
 #include <G3Data.h>
 #include <G3Timestream.h>
 #include <G3Map.h>
 #include <G3Timesample.h>
-#include <G3SuperTimestream.h>
 
 #include <pybindings.h>
 #include <boost/python.hpp>
@@ -16,8 +15,7 @@
 #include <string>
 #include <thread>
 #include <inttypes.h>
-#include "so3g_numpy.h"
-
+#include <G3SuperTimestream.h>
 
 namespace bp = boost::python;
 
@@ -277,7 +275,7 @@ void SmurfBuilder::setDataEncodeAlgo(int algo){
     data_encode_algo_ = algo;
 }
 
-const int SmurfBuilder::getDataEncodeAlgo(){
+int SmurfBuilder::getDataEncodeAlgo() const{
     return data_encode_algo_;
 }
 
@@ -285,7 +283,7 @@ void SmurfBuilder::setPrimaryEncodeAlgo(int algo){
     primary_encode_algo_ = algo;
 }
 
-const int SmurfBuilder::getPrimaryEncodeAlgo(){
+int SmurfBuilder::getPrimaryEncodeAlgo() const{
     return primary_encode_algo_;
 }
 
@@ -293,7 +291,7 @@ void SmurfBuilder::setTesBiasEncodeAlgo(int algo){
     tes_bias_encode_algo_ = algo;
 }
 
-const int SmurfBuilder::getTesBiasEncodeAlgo(){
+int SmurfBuilder::getTesBiasEncodeAlgo() const{
     return tes_bias_encode_algo_;
 }
 
@@ -301,8 +299,30 @@ void SmurfBuilder::setTimeEncodeAlgo(int algo){
     time_encode_algo_ = algo;
 }
 
-const int SmurfBuilder::getTimeEncodeAlgo(){
+int SmurfBuilder::getTimeEncodeAlgo() const{
     return time_encode_algo_;
+}
+
+// Assist with testing the pure C++ interface
+static
+G3SuperTimestreamPtr test_cxx_interface(int nsamps, int first, int second)
+{
+	int shape[2] = {3, nsamps};
+	int typenum = NPY_INT32;
+	int32_t buf[shape[0] * shape[1]] = {0};
+
+	auto ts = G3SuperTimestreamPtr(new G3SuperTimestream());
+	const char *chans[] = {"a", "b", "c"};
+	ts->names = G3VectorString(chans, std::end(chans));
+	ts->times = G3VectorTime();
+	for (int i=first; i<second; i++) {
+		ts->times.push_back(G3Time::Now());
+		buf[i] = 77;
+	}
+	ts->SetDataFromBuffer((void*)buf, 2, shape, typenum,
+			      std::pair<int,int>(first, second));
+
+	return ts;
 }
 
 void SmurfBuilder::setup_python(){
@@ -328,6 +348,7 @@ void SmurfBuilder::setup_python(){
     .def("getTimeEncodeAlgo", &SmurfBuilder::getTimeEncodeAlgo)
     .def("setTimeEncodeAlgo", &SmurfBuilder::setTimeEncodeAlgo)
     ;
+    bp::def("build_g3super", test_cxx_interface);
 
     bp::implicitly_convertible<SmurfBuilderPtr, G3ModulePtr>();
 }
