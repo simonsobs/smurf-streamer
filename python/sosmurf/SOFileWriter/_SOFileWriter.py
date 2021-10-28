@@ -5,6 +5,7 @@ from spt3g import core
 import os
 import time
 from sosmurf.SessionManager import FlowControl
+from pysmurf.client.util.pub import Publisher
 
 class G3Rotator:
     def __init__(self, data_path, file_dur, debug=0):
@@ -64,6 +65,10 @@ class G3Rotator:
         self.debug = debug
         self.disable = False
 
+        # Creates pysmurf publisher object to notify about G3Files being
+        # created.
+        self.pub = Publisher()
+
     # Getters and setters required for rogue variables
     def get_cur_path(self):
         return self.cur_path
@@ -95,10 +100,14 @@ class G3Rotator:
         file_start_time, and cur_session_id to the default
         """
         if self._writer is not None:
-            self.cur_path = ''
             self.file_start_time = 0
             self.cur_session_id = 0
             self._writer(core.G3Frame(core.G3FrameType.EndProcessing))
+            self.pub.publish(
+                {'path': self.cur_path, 'archive_name': 'timestreams'},
+                msgtype='g3_file'
+            )
+            self.cur_path = ''
         self._writer = None
 
     def new_writer(self, frame, seq):
