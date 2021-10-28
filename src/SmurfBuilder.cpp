@@ -148,17 +148,26 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     data_ts->times = sample_times;
     data_ts->SetDataFromBuffer((void*)data_buffer, 2, data_shape, NPY_INT32,
             std::pair<int,int>(0, nsamps));
-    data_ts->Options(data_encode_algo_, time_encode_algo_);
+    data_ts->Options(
+        enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
+        time_encode_algo_
+    );
 
     tes_ts->times = G3VectorTime(sample_times);
     tes_ts->SetDataFromBuffer((void*)tes_buffer, 2, tes_shape, NPY_INT32,
             std::pair<int,int>(0, nsamps));
-    tes_ts->Options(tes_bias_encode_algo_, time_encode_algo_);
+    tes_ts->Options(
+        enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
+        time_encode_algo_
+    );
 
     primary_ts->times = G3VectorTime(sample_times);
     primary_ts->SetDataFromBuffer((void*)primary_buffer, 2, primary_shape,
             NPY_INT64, std::pair<int,int>(0, nsamps));
-    primary_ts->Options(primary_encode_algo_, time_encode_algo_);
+    primary_ts->Options(
+        enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
+        time_encode_algo_
+    );
 
     if (encode_timestreams_){
         data_ts->Encode();
@@ -303,6 +312,29 @@ int SmurfBuilder::getTimeEncodeAlgo() const{
     return time_encode_algo_;
 }
 
+int SmurfBuilder::getEnableCompression() const{
+    return enable_compression_;
+}
+
+void SmurfBuilder::setEnableCompression(int enable){
+    enable_compression_ = enable;
+}
+
+int SmurfBuilder::getBz2WorkFactor() const{
+    return bz2_work_factor_;
+}
+
+void SmurfBuilder::setBz2WorkFactor(int bz2_work_factor){
+    bz2_work_factor_ = bz2_work_factor;
+}
+
+int SmurfBuilder::getFlacLevel() const{
+    return flac_level_;
+}
+
+void SmurfBuilder::setFlacLevel(int flac_level){
+    flac_level_ = flac_level;
+}
 // Assist with testing the pure C++ interface
 static
 G3SuperTimestreamPtr test_cxx_interface(int nsamps, int first, int second)
@@ -347,6 +379,12 @@ void SmurfBuilder::setup_python(){
     .def("setTesBiasEncodeAlgo", &SmurfBuilder::setTesBiasEncodeAlgo)
     .def("getTimeEncodeAlgo", &SmurfBuilder::getTimeEncodeAlgo)
     .def("setTimeEncodeAlgo", &SmurfBuilder::setTimeEncodeAlgo)
+    .def("getEnableCompression", &SmurfBuilder::getEnableCompression)
+    .def("setEnableCompression", &SmurfBuilder::setEnableCompression)
+    .def("getBz2WorkFactor", &SmurfBuilder::getBz2WorkFactor)
+    .def("setBz2WorkFactor", &SmurfBuilder::setBz2WorkFactor)
+    .def("getFlacLevel", &SmurfBuilder::getFlacLevel)
+    .def("setFlacLevel", &SmurfBuilder::setFlacLevel)
     ;
     bp::def("build_g3super", test_cxx_interface);
 

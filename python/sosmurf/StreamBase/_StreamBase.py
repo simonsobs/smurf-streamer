@@ -10,14 +10,14 @@ class StreamBase(pyrogue.Device):
     """
     def __init__(self, name, debug_data=False, debug_meta=False,
                  debug_builder=False, agg_time=1.0, builder_encode=False,
-                 data_algo=0, tes_bias_algo=0, primary_algo=0, time_algo=0,
+                 data_algo=3, tes_bias_algo=3, primary_algo=3, time_algo=3,
+                 enable_compression=1, bz2_work_factor=1, flac_level=3,
                  **kwargs):
         pyrogue.Device.__init__(self, name=name, description='SMuRF Data CustomTransmitter', **kwargs)
 
         self.builder = sosmurfcore.SmurfBuilder()
         self._transmitter = sosmurfcore.SmurfTransmitter(self.builder, debug_data, debug_meta)
 
-        # Add pyrogue variables here!!
         self.add(pyrogue.LocalVariable(
             name='DebugData',
             description='Set the debug mode, for the data',
@@ -26,7 +26,6 @@ class StreamBase(pyrogue.Device):
             localSet=lambda value: self._transmitter.setDebugData(value),
             localGet=self._transmitter.getDebugData))
 
-        # Add a variable for the debugMeta flag
         self.add(pyrogue.LocalVariable(
             name='DebugMeta',
             description='Set the debug mode, for the metadata',
@@ -35,7 +34,6 @@ class StreamBase(pyrogue.Device):
             localSet=lambda value: self._transmitter.setDebugMeta(value),
             localGet=self._transmitter.getDebugMeta))
 
-        # Add a variable for the Builder flag
         self.add(pyrogue.LocalVariable(
             name='DebugBuilder',
             description='Set the debug mode for the Smurfbuilder',
@@ -51,6 +49,10 @@ class StreamBase(pyrogue.Device):
             value=builder_encode,
             localSet=lambda value: self.builder.setEncode(value),
             localGet=self.builder.getEncode))
+
+        ######################################################################
+        # Encoding options
+        ######################################################################
 
         self.add(pyrogue.LocalVariable(
             name='DataEncodeAlgo',
@@ -83,6 +85,30 @@ class StreamBase(pyrogue.Device):
             value=time_algo,
             localSet=lambda value: self.builder.setTimeEncodeAlgo(value),
             localGet=self.builder.getTimeEncodeAlgo))
+
+        self.add(pyrogue.LocalVariable(
+            name='EnableCompression',
+            description='If true, data will be compressed on serialization',
+            mode='RW',
+            value=enable_compression,
+            localSet=lambda value: self.builder.setEnableCompression(value),
+            localGet=self.builder.getEnableCompression))
+
+        self.add(pyrogue.LocalVariable(
+            name='Bz2WorkFactor',
+            description='Sets the BZ Work factor of the bzip compression',
+            mode='RW',
+            value=bz2_work_factor,
+            localSet=lambda value: self.builder.setBz2WorkFactor(value),
+            localGet=self.builder.getBz2WorkFactor))
+
+        self.add(pyrogue.LocalVariable(
+            name='FlacLevel',
+            description='Sets the algorithm used to compress the time fields of all timestreams',
+            mode='RW',
+            value=flac_level,
+            localSet=lambda value: self.builder.setFlacLevel(value),
+            localGet=self.builder.getFlacLevel))
 
         self.add(pyrogue.LocalVariable(
             name='AggTime',
