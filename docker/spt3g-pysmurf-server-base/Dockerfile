@@ -19,6 +19,7 @@ RUN apt-get update --fix-missing \
         build-essential \
         automake \
         gfortran \
+        libbz2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/CMB-S4/spt3g_software.git
@@ -35,7 +36,7 @@ ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
 
 # SO3G install
 WORKDIR /usr/local/src
-RUN git clone https://github.com/simonsobs/so3g.git -b super-timestream
+RUN git clone https://github.com/simonsobs/so3g.git
 ENV LANG C.UTF-8
 WORKDIR /usr/local/src/so3g
 
@@ -47,3 +48,7 @@ RUN mkdir -p build \
     && make install
 
 env SO3G_DIR /usr/local/src/so3g
+
+# Install pysmurf-client requirements so we can use the client-version of the
+# pysmurf publisher
+RUN pip3 install -r /usr/local/src/pysmurf/requirements.txt
