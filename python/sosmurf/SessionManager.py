@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 
-SOSTREAM_VERSION = 1
+SOSTREAM_VERSION = 2
 
 
 class Registers:
