@@ -50,6 +50,15 @@ public:
     void setTimeEncodeAlgo(int algo);
     int getTimeEncodeAlgo() const;
 
+    void setEnableCompression(int enable);
+    int getEnableCompression() const;
+
+    void setBz2WorkFactor(int bz2_workfactor);
+    int getBz2WorkFactor() const;
+
+    void setFlacLevel(int flac_level);
+    int getFlacLevel() const;
+
 protected:
     void ProcessNewData();
 
@@ -79,6 +88,9 @@ private:
     int primary_encode_algo_;
     int tes_bias_encode_algo_;
     int time_encode_algo_;
+    int enable_compression_;
+    int bz2_work_factor_;
+    int flac_level_;
 
     bool running_;
     bool debug_;
