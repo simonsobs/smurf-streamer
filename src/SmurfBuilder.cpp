@@ -157,7 +157,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     tes_ts->SetDataFromBuffer((void*)tes_buffer, 2, tes_shape, NPY_INT32,
             std::pair<int,int>(0, nsamps));
     tes_ts->Options(
-        enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
+        enable_compression_, flac_level_, bz2_work_factor_, tes_bias_encode_algo_,
         time_encode_algo_
     );
 
@@ -165,7 +165,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     primary_ts->SetDataFromBuffer((void*)primary_buffer, 2, primary_shape,
             NPY_INT64, std::pair<int,int>(0, nsamps));
     primary_ts->Options(
-        enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
+        enable_compression_, flac_level_, bz2_work_factor_, primary_encode_algo_,
         time_encode_algo_
     );
 
