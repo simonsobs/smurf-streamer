@@ -210,6 +210,17 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         printf(" - Copy Time: %ld ms\n", (frame_start - copy_start).count()/1000000);
         printf(" - Frame Time: %ld ms\n", (stop_time - frame_start).count()/1000000);
         printf("%lu elements in queue...\n", queue_.size());
+        printf(
+            "Encoding Options:\n"
+            " - enabled: %d\n"
+            " - data_algo: %d\n"
+            " - primary_algo: %d\n"
+            " - tes_algo: %d\n"
+            " - flac_level: %d\n"
+            " - BZ2_WorkFactor: %d\n",
+            enable_compression_, data_encode_algo_, primary_encode_algo_,
+            time_encode_algo_, flac_level_, bz2_work_factor_
+        );
     }
 
     return frame;
