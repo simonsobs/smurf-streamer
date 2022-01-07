@@ -36,7 +36,10 @@ ENV PYTHONPATH /usr/local/src/spt3g_software/build:${PYTHONPATH}
 
 # SO3G install
 WORKDIR /usr/local/src
-RUN git clone https://github.com/simonsobs/so3g.git
+RUN git clone https://github.com/simonsobs/so3g.git \
+    && cd /usr/local/src/so3g \
+    && git checkout 744e46beb121bbd2a2e5840513d7c17e4a92ca76
+
 ENV LANG C.UTF-8
 WORKDIR /usr/local/src/so3g
 
@@ -44,7 +47,7 @@ RUN pip3 install -r requirements.txt
 RUN mkdir -p build \
     && cd build \
     && cmake .. -DCMAKE_PREFIX_PATH=$SPT3G_SOFTWARE_BUILD_PATH \
-    && make -j 16 \
+    && make \
     && make install
 
 env SO3G_DIR /usr/local/src/so3g
