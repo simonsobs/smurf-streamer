@@ -16,12 +16,15 @@ root.FpgaTopLevel.AppTop.AppCore:
     enableStreaming: 3
     SysgenCryo:
       tuneFilePath: 3
-      Base[{{range(8)}}]:
+      Base[{{range(8)}}]:                  # This is the band_root
         band: 1
         ScratchPad: 3
         bandCenterMHz: 1
         toneFrequencyOffsetMHz: 1
-        CryoChannels:
+        feedbackGain: 1
+        lmsGain: 1
+        lmsFreqHz: 1
+        CryoChannels:                      # Cryo root
             centerFrequencyArray: 1
             amplitudeScaleArray: 1
             etaMagArray: 1
