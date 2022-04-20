@@ -60,8 +60,9 @@ def main():
         args.pcie_rssi_lane = slot - 2
         print(f"Using pcie lane {args.pcie_rssi_lane}")
 
-    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False,
-                                     debug_data=False, agg_time=5.0)
+    stream_root = sosmurf.StreamBase(
+        "SOStream", debug_meta=False, debug_data=False, agg_time=2.0
+    )
     file_writer = sosmurf.SOFileWriter("SOFileWriter", g3_dir, file_dur=10*60)
     stream_root.add(file_writer)
 

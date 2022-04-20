@@ -9,7 +9,7 @@ class StreamBase(pyrogue.Device):
         Stream Base pyrogue object.
     """
     def __init__(self, name, debug_data=False, debug_meta=False,
-                 debug_builder=False, agg_time=1.0, builder_encode=False,
+                 debug_builder=False, agg_time=1.0, builder_encode=True,
                  data_algo=3, tes_bias_algo=2, primary_algo=2, time_algo=2,
                  enable_compression=1, bz2_work_factor=1, flac_level=3,
                  **kwargs):
