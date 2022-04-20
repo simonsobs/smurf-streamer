@@ -63,9 +63,8 @@ class SessionManager:
 
     def start_session(self):
         self.session_id = int(time.time())
-
         frame = core.G3Frame(core.G3FrameType.Observation)
-
+        frame['location'] = 'start'
         self.tag_frame(frame)
         return frame
 
@@ -80,6 +79,12 @@ class SessionManager:
             if self.end_session_flag:
                 # Returns [previous, end, obs cleanse, wiring cleanse]
                 out = []
+
+                end_session_frame = core.G3Frame(core.G3FrameType.Observation)
+                end_session_frame['location'] = 'end'
+                self.tag_frame(end_session_frame)
+
+                out.append(end_session_frame)
                 out.append(self.flowcontrol_frame(FlowControl.END))
 
                 f = core.G3Frame(core.G3FrameType.Observation)
