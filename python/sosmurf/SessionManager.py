@@ -64,7 +64,7 @@ class SessionManager:
     def start_session(self):
         self.session_id = int(time.time())
         frame = core.G3Frame(core.G3FrameType.Observation)
-        frame['location'] = 'start'
+        frame['stream_placement'] = 'start'
         self.tag_frame(frame)
         return frame
 
@@ -81,7 +81,7 @@ class SessionManager:
                 out = []
 
                 end_session_frame = core.G3Frame(core.G3FrameType.Observation)
-                end_session_frame['location'] = 'end'
+                end_session_frame['stream_placement'] = 'end'
                 self.tag_frame(end_session_frame)
 
                 out.append(end_session_frame)
