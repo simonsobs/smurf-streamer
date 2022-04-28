@@ -1,4 +1,4 @@
-FROM tidair/pysmurf-server:v5.0.2
+FROM tidair/pysmurf-server:v6.0.0
 
 # Installs spt3g to /usr/local/src/
 WORKDIR /usr/local/src
