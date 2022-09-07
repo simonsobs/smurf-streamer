@@ -1,14 +1,8 @@
 from spt3g import core
-
-import pyrogue.gui
-import pysmurf.core.devices
 import pysmurf.core.server_scripts.Common as pysmurf_common
-
-import argparse
-import shlex
 import sosmurf
-import sys
 
+zip_file = '/tmp/fw/rogue_MicrowaveMuxBpEthGen2_v1.1.0.zip'
 
 def main():
 
@@ -18,6 +12,8 @@ def main():
     parser.add_argument('--stream-id', type=str)
 
     args = parser.parse_args()
+
+    args.zip_file = zip_file
     pysmurf_common.process_args(args)
 
     stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, debug_builder=True, agg_time=1.0)
@@ -41,9 +37,9 @@ def main():
             {'groups' : ['publish','stream'], 'pollInterval': 0},
     }
 
-
     # Import the root device after the python path is updated
     from pysmurf.core.roots.EmulationRoot import EmulationRoot
+    args.epics_prefix = 'emulator'
 
     with EmulationRoot ( config_file    = args.config_file,
                          epics_prefix   = args.epics_prefix,
@@ -54,7 +50,6 @@ def main():
                          txDevice       = stream_root,
                          VariableGroups = vgs) as root:
         print("Loaded Emulation root", flush=True)
-
         pipe.Run(profile=True)
         
 if __name__ == '__main__':

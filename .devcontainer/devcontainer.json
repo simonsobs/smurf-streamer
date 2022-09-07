@@ -1,0 +1,26 @@
+{
+    "image": "smurf-streamer:latest",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/usr/local/src/smurf-streamer,type=bind,consistency=cached",
+
+	"workspaceFolder": "/usr/local/src/smurf-streamer",
+    "runArgs": ["--network=host", "--cap-add=SYS_PTRACE"],
+    "containerEnv": {
+        "OCS_CONFIG_DIR": "/config",
+        "SLOT": "2"
+    },
+    "mounts": [
+        "source=${localEnv:OCS_CONFIG_DIR},target=/config,type=bind"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools",
+				"twxs.cmake",
+				"ms-vscode.cmake-tools",
+				"donjayamanne.python-extension-pack",
+				"ms-python.python@2022.8.0",
+				"ms-toolsai.jupyter"
+			]
+		}
+	}
+}
