@@ -1,6 +1,7 @@
 from spt3g import core
 import pysmurf.core.server_scripts.Common as pysmurf_common
 import sosmurf
+import os
 
 zip_file = '/tmp/fw/rogue_MicrowaveMuxBpEthGen2_v1.1.0.zip'
 
@@ -14,9 +15,18 @@ def main():
     args = parser.parse_args()
 
     args.zip_file = zip_file
+    args.stream_id = 'emulator'
     pysmurf_common.process_args(args)
 
-    stream_root = sosmurf.StreamBase("SOStream", debug_meta=False, debug_data=False, debug_builder=True, agg_time=1.0)
+    stream_root = sosmurf.StreamBase(
+        "SOStream", debug_meta=False, debug_data=False, debug_builder=True,
+        agg_time=1.0
+    )
+
+    g3_dir = '/data/so/timestreams'
+    os.makedirs(g3_dir, exist_ok=True)
+    file_writer = sosmurf.SOFileWriter("SOFileWriter", g3_dir, file_dur=10*60)
+    stream_root.add(file_writer)
 
     pipe = core.G3Pipeline()
     pipe.Add(stream_root.builder)
@@ -25,17 +35,12 @@ def main():
     pipe.Add(core.G3NetworkSender,
         hostname='*', port=args.stream_port, max_queue_size=1000
     )
+    pipe.Add(file_writer.rotator)
 
-    vgs = {
-        'root.FpgaTopLevel.AppTop.AppCore.enableStreaming':
-            {'groups' : ['publish','stream'], 'pollInterval': 0},
-        'root.SmurfProcessor.SOStream.DebugMeta':
-            {'groups' : ['publish','stream'], 'pollInterval': 0},
-        'root.StreamDataSource.SourceEnable':
-            {'groups' : ['publish','stream'], 'pollInterval': 0},
-        'root.StreamDataSource.Period':
-            {'groups' : ['publish','stream'], 'pollInterval': 0},
-    }
+    vgs = None
+    default_meta_file = '/usr/local/src/smurf-streamer/meta_registers.yaml'
+    if os.path.exists(default_meta_file):
+        vgs = sosmurf.util.VariableGroups.from_file(default_meta_file)
 
     # Import the root device after the python path is updated
     from pysmurf.core.roots.EmulationRoot import EmulationRoot
@@ -48,7 +53,7 @@ def main():
                          disable_bay0   = args.disable_bay0,
                          disable_bay1   = args.disable_bay1,
                          txDevice       = stream_root,
-                         VariableGroups = vgs) as root:
+                         VariableGroups = vgs.data) as root:
         print("Loaded Emulation root", flush=True)
         pipe.Run(profile=True)
         

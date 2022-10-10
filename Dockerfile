@@ -4,7 +4,7 @@ WORKDIR /usr/local/src/
 
 COPY . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build
-RUN cmake ..
+RUN rm -rf * && cmake ..
 RUN make
 
 RUN pip3 install dumb-init

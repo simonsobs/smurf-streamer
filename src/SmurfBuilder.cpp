@@ -102,7 +102,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
 
     std::vector<std::string> primary_keys = {
         "UnixTime", "FluxRampIncrement", "FluxRampOffset", "Counter0",
-        "Counter1", "Counter2", "AveragingResetBits", "FrameCounter",
+        "Counter1", "Counter2", "TimingBits", "FrameCounter",
         "TESRelaySetting"
     };
     int num_keys = primary_keys.size();
@@ -130,7 +130,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         primary_buffer[sample + 3 * nsamps] = hdr->getCounter0();
         primary_buffer[sample + 4 * nsamps] = hdr->getCounter1();
         primary_buffer[sample + 5 * nsamps] = hdr->getCounter2();
-        primary_buffer[sample + 6 * nsamps] = hdr->getAveragingResetBits();
+        primary_buffer[sample + 6 * nsamps] = hdr->getTimingBits();
         primary_buffer[sample + 7 * nsamps] = hdr->getFrameCounter();
         primary_buffer[sample + 8 * nsamps] = hdr->getTESRelaySetting();
 

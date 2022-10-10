@@ -68,8 +68,10 @@ find_package(Boost COMPONENTS thread)
 # #####################################
 # set(DO_PYTHON 0)
 #
-# find_package(PythonInterp 3.6 REQUIRED)
-# find_package(PythonLibs 3.6 REQUIRED)
+find_package(PythonInterp 3.6 REQUIRED)
+find_package(PythonLibs 3.6 REQUIRED)
+
+find_package (Python3 COMPONENTS Interpreter Development)
 
 #####################################
 # Setup build
