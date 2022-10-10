@@ -1,7 +1,9 @@
-FROM spt3g-pysmurf-server-base
+#FROM sodetlib:latest
+FROM simonsobs/sodetlib:DEV-so-docker-builds
 
 WORKDIR /usr/local/src/
 
+ENV SO3G_DIR=/app_lib/so3g
 COPY . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build
 RUN cmake ..

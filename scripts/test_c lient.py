@@ -1,6 +1,9 @@
 #%% Imports
 from pysmurf.client.base.smurf_control import SmurfControl
 import os
+import sodetlib as sdl
+import numpy as np
+
 
 #%%
 class Registers:
@@ -32,6 +35,7 @@ def get_reg(S: SmurfControl, reg):
     return S._caget(_reg)
 
 #%%
+#$$
 
 epics_root="emulator"
 cfg_file = '/usr/local/src/pysmurf/cfg_files/template/template.cfg'
@@ -39,8 +43,13 @@ os.makedirs('/data/smurf_data', exist_ok=True)
 os.makedirs('/data/smurf_data/tune', exist_ok=True)
 os.makedirs('/data/smurf_data/status', exist_ok=True)
 S = SmurfControl(epics_root=epics_root, cfg_file=cfg_file)
-
 #%%
+
+sdl.stream_g3_on(S, emulator=True, channel_mask=np.arange(30))
+#%%
+S.set_stream_enable(1)
+#%%
+
 set_reg(S, Registers.debug_data, 1)
 # %%
-get_reg(S, Registers.debug_data)
+get_reg(S, Registers.debug_meta)
