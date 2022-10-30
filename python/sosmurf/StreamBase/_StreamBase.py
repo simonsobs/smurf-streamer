@@ -183,6 +183,14 @@ class StreamBase(pyrogue.Device):
             value=0,
         ))
 
+        self.add(pyrogue.LocalVariable(
+            name="DroppedFrames",
+            description="Number of frames dropped by the ",
+            mode='RO',
+            value=0,
+            localGet=self.builder.getDroppedFrames
+        ))
+
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
 

@@ -24,7 +24,7 @@ SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE),
     out_num_(0), num_channels_(0),
     agg_duration_(3), debug_(false), encode_timestreams_(false),
-    dropped_packets_(0)
+    dropped_frames_(0)
 {
     process_stash_thread_ = std::thread(ProcessStashThread, this);
 
@@ -224,6 +224,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         printf(" - Compression Time: %ld ms\n", (frame_start - compression_start).count()/1000000);
         printf(" - Frame Time: %ld ms\n", (stop_time - frame_start).count()/1000000);
         printf("%lu elements in queue...\n", queue_.size());
+        printf("dropped frames: %lu\n", dropped_frames_);
         printf(
             "Encoding Options:\n"
             " - enabled: %d\n"
@@ -302,18 +303,18 @@ void SmurfBuilder::ProcessNewData(){
 
     else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
         std::lock_guard<std::mutex> lock(write_stash_lock_);
-        if (write_stash_.size() < MAX_BUILDER_QUEUE_SIZE){
+        if (queue_size_ < MAX_BUILDER_QUEUE_SIZE){
             write_stash_.push_back(data_pkt);
             queue_size_ += data_pkt->sp->getHeader()->getNumberChannels();
         }
         else{
-            dropped_packets_++;
+            dropped_frames_++;
         }
     }
 }
 
-size_t SmurfBuilder::getDroppedPackets(){
-    return dropped_packets_;
+size_t SmurfBuilder::getDroppedFrames(){
+    return dropped_frames_;
 }
 
 void SmurfBuilder::setDataEncodeAlgo(int algo){
@@ -421,8 +422,10 @@ void SmurfBuilder::setup_python(){
     .def("setBz2WorkFactor", &SmurfBuilder::setBz2WorkFactor)
     .def("getFlacLevel", &SmurfBuilder::getFlacLevel)
     .def("setFlacLevel", &SmurfBuilder::setFlacLevel)
+    .def("getDroppedFrames", &SmurfBuilder::getDroppedFrames)
     ;
     bp::def("build_g3super", test_cxx_interface);
 
     bp::implicitly_convertible<SmurfBuilderPtr, G3ModulePtr>();
+
 }
