@@ -11,6 +11,10 @@
 
 #define MAX_DATASOURCE_QUEUE_SIZE 3000
 
+// Maximum total size of the write queue (channels * samples)
+// Memory usage should be capped to around a few GB
+#define MAX_BUILDER_QUEUE_SIZE 100000000
+
 // Flow control constants
 #define FC_ALIVE   0
 #define FC_START   1
@@ -59,6 +63,8 @@ public:
     void setFlacLevel(int flac_level);
     int getFlacLevel() const;
 
+    size_t getDroppedPackets();
+
 protected:
     void ProcessNewData();
 
@@ -91,6 +97,8 @@ private:
     int enable_compression_;
     int bz2_work_factor_;
     int flac_level_;
+    size_t queue_size_;
+    size_t dropped_packets_;
 
     bool running_;
     bool debug_;

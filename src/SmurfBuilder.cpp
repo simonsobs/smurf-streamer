@@ -17,12 +17,14 @@
 #include <inttypes.h>
 #include <G3SuperTimestream.h>
 
+
 namespace bp = boost::python;
 
 SmurfBuilder::SmurfBuilder() :
     G3EventBuilder(MAX_DATASOURCE_QUEUE_SIZE),
     out_num_(0), num_channels_(0),
-    agg_duration_(3), debug_(false), encode_timestreams_(false)
+    agg_duration_(3), debug_(false), encode_timestreams_(false),
+    dropped_packets_(0)
 {
     process_stash_thread_ = std::thread(ProcessStashThread, this);
 
@@ -62,7 +64,8 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         std::deque<SmurfSampleConstPtr>::iterator stop){
     // Time points used for debugging purposes
     std::chrono::time_point<std::chrono::system_clock>
-        start_time, stop_time, alloc_start, copy_start, frame_start;
+        start_time, stop_time, alloc_start, copy_start, frame_start,
+        compression_start, gil_ensure_start, gil_ensure_stop;
     start_time = std::chrono::system_clock::now();
 
     int nchans = (*start)->sp->getHeader()->getNumberChannels();
@@ -142,8 +145,14 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         }
     }
 
+    if (debug_)
+        gil_ensure_start = std::chrono::system_clock::now();
+
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
+
+    if (debug_)
+        gil_ensure_stop = std::chrono::system_clock::now();
 
     data_ts->times = sample_times;
     data_ts->SetDataFromBuffer((void*)data_buffer, 2, data_shape, NPY_INT32,
@@ -168,6 +177,9 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         enable_compression_, flac_level_, bz2_work_factor_, primary_encode_algo_,
         time_encode_algo_
     );
+
+    if (debug_)
+        compression_start = std::chrono::system_clock::now();
 
     if (encode_timestreams_){
         data_ts->Encode();
@@ -207,7 +219,9 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         printf("Frame Out (%d channels, %d samples)\n", nchans, nsamps);
         printf("Total Time: %ld ms\n", (stop_time - start_time).count()/1000000);
         printf(" - Alloc Time: %ld ms\n", (copy_start - alloc_start).count()/1000000);
-        printf(" - Copy Time: %ld ms\n", (frame_start - copy_start).count()/1000000);
+        printf(" - Copy Time: %ld ms\n", (compression_start - copy_start).count()/1000000);
+        printf(" - GIL Wait Time: %ld ms\n", (gil_ensure_stop - gil_ensure_start).count()/1000000);
+        printf(" - Compression Time: %ld ms\n", (frame_start - compression_start).count()/1000000);
         printf(" - Frame Time: %ld ms\n", (stop_time - frame_start).count()/1000000);
         printf("%lu elements in queue...\n", queue_.size());
         printf(
@@ -232,6 +246,7 @@ void SmurfBuilder::FlushStash(){
     {
         std::lock_guard<std::mutex> write_lock(write_stash_lock_);
         write_stash_.swap(read_stash_);
+        queue_size_ = 0;
     }
 
     if (read_stash_.empty()){
@@ -287,8 +302,18 @@ void SmurfBuilder::ProcessNewData(){
 
     else if (data_pkt = boost::dynamic_pointer_cast<const SmurfSample>(pkt)){
         std::lock_guard<std::mutex> lock(write_stash_lock_);
-        write_stash_.push_back(data_pkt);
+        if (write_stash_.size() < MAX_BUILDER_QUEUE_SIZE){
+            write_stash_.push_back(data_pkt);
+            queue_size_ += data_pkt->sp->getHeader()->getNumberChannels();
+        }
+        else{
+            dropped_packets_++;
+        }
     }
+}
+
+size_t SmurfBuilder::getDroppedPackets(){
+    return dropped_packets_;
 }
 
 void SmurfBuilder::setDataEncodeAlgo(int algo){

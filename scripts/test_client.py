@@ -1,6 +1,9 @@
 #%% Imports
 from pysmurf.client.base.smurf_control import SmurfControl
 import os
+import numpy as np
+import sodetlib as sdl
+from tqdm import tqdm, trange
 
 #%%
 class Registers:
@@ -29,7 +32,7 @@ def set_reg(S: SmurfControl, reg, val):
 
 def get_reg(S: SmurfControl, reg):
     _reg = ':'.join([S._epics_root, reg])
-    return S._caget(_reg)
+    return S._caget(_reg, use_monitor=False)
 
 #%%
 
@@ -41,6 +44,20 @@ os.makedirs('/data/smurf_data/status', exist_ok=True)
 S = SmurfControl(epics_root=epics_root, cfg_file=cfg_file)
 
 #%%
-set_reg(S, Registers.debug_data, 1)
+set_reg(S, Registers.debug_builder, 1)
+
+#%%
+S.set_channel_mask(np.arange(2000))
+#%%
+S.set_stream_data_source_period(1e-6)
+#%%
+sdl.stream_g3_on(S, emulator=True)
+#%%
+S.set_postdata_emulator_type('Noise')
+
+#%%
+from epics import caget, caput
+#%%
+set_reg(S, Registers.agg_time, 10)
+    
 # %%
-get_reg(S, Registers.debug_data)
