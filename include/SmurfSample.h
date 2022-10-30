@@ -22,7 +22,6 @@ public:
         G3FrameObject(), time_(time), status_(status){}
 
     std::string status_;
-
     G3Time time_;
 
     static void setup_python() {};
