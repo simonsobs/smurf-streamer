@@ -131,7 +131,7 @@ class StreamBase(pyrogue.Device):
 
         # Add the data dropped counter variable
         self.add(pyrogue.LocalVariable(
-            name='dataDropCnt',
+            name='TransmitterDataDropCnt',
             description="Number of data frames dropped by the "
                         "SmurfTransmitter's data buffer",
             mode='RO',
@@ -141,7 +141,7 @@ class StreamBase(pyrogue.Device):
 
         # Add the metaData dropped counter variable
         self.add(pyrogue.LocalVariable(
-            name='metaDropCnt',
+            name='TransmitterMetaDropCnt',
             description="Number of metadata frames dropped by the "
                         "SmurfTransmitter's metadata buffer",
             mode='RO',
@@ -185,7 +185,7 @@ class StreamBase(pyrogue.Device):
 
         self.add(pyrogue.LocalVariable(
             name="DroppedFrames",
-            description="Number of frames dropped by the ",
+            description="Number of frames dropped by the SmurfBuilder module",
             mode='RO',
             value=0,
             localGet=self.builder.getDroppedFrames
