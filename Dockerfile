@@ -1,6 +1,9 @@
-FROM spt3g-pysmurf-server-base
+FROM simonsobs/so_smurf_base:v0.0.1
 
 WORKDIR /usr/local/src/
+
+ENV SO3G_DIR /usr/local/src/so3g
+ENV SPT3G_DIR /usr/local/src/spt3g_software
 
 COPY . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build

@@ -1,11 +1,7 @@
 version: '3.7'
 
 services:
-    spt3g-smurf-base:
-        image: spt3g-pysmurf-server-base
-        build: ./docker/spt3g-pysmurf-server-base/
 
     smurf-streamer:
         image: smurf-streamer
         build: .
-        depends_on: [spt3g-smurf-base]
