@@ -94,7 +94,7 @@ def main():
         'epics_prefix': args.epics_prefix, 'polling_en': args.polling_en,
         'pv_dump_file': args.pv_dump_file, 'disable_bay0': args.disable_bay0,
         'disable_bay1': args.disable_bay1, 'configure': args.configure,
-        'txDevice': stream_root
+        'txDevice': stream_root, 'enable_pwri2c': args.enable_em22xx,
     }
     if vgs is not None:
         root_kwargs['VariableGroups'] = vgs.data
