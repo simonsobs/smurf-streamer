@@ -29,11 +29,20 @@ root.FpgaTopLevel.AppTop.AppCore:
             amplitudeScaleArray: 1
             etaMagArray: 1
             etaPhaseArray: 1
+            feedbackEnableArray: 1
     RtmCryoDet:
         RampMaxCnt: 1
         EnableRampTrigger: 1
-root.FpgaTopLevel.AmcCarrierCore.AxiSysMonUltraScale:
-    Temperature: [3, 1]
+root.FpgaTopLevel.AmcCarrierCore:
+    AxiSysMonUltraScale:
+        Temperature: [2, 1]
+    EM22xx:
+        IOUT: [2, 1]   
+    AmcCarrierTiming:
+        TimingFrameRx:
+            CrcErrCount: 2
+            RxDecErrCount: 2
+            RxDspErrCount: 2
 root.SmurfProcessor:
     ChannelMapper:
         NumChannels: 1
