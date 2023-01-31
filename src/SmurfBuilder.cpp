@@ -153,26 +153,34 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     data_ts->times = sample_times;
     data_ts->SetDataFromBuffer((void*)data_buffer, 2, data_shape, NPY_INT32,
             std::pair<int,int>(0, nsamps));
-    data_ts->Options(
-        enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
-        time_encode_algo_
-    );
 
     tes_ts->times = G3VectorTime(sample_times);
     tes_ts->SetDataFromBuffer((void*)tes_buffer, 2, tes_shape, NPY_INT32,
             std::pair<int,int>(0, nsamps));
-    tes_ts->Options(
-        enable_compression_, flac_level_, bz2_work_factor_, tes_bias_encode_algo_,
-        time_encode_algo_
-    );
 
     primary_ts->times = G3VectorTime(sample_times);
     primary_ts->SetDataFromBuffer((void*)primary_buffer, 2, primary_shape,
             NPY_INT64, std::pair<int,int>(0, nsamps));
-    primary_ts->Options(
-        enable_compression_, flac_level_, bz2_work_factor_, primary_encode_algo_,
-        time_encode_algo_
-    );
+
+    if (enable_compression_){
+        data_ts->Options(
+            enable_compression_, flac_level_, bz2_work_factor_, data_encode_algo_,
+            time_encode_algo_
+        );
+        tes_ts->Options(
+            enable_compression_, flac_level_, bz2_work_factor_, tes_bias_encode_algo_,
+            time_encode_algo_
+        );
+        primary_ts->Options(
+            enable_compression_, flac_level_, bz2_work_factor_, primary_encode_algo_,
+            time_encode_algo_
+        );
+    }
+    else{
+        data_ts->Options(enable_compression_, -1, -1, -1, -1);
+        tes_ts->Options(enable_compression_, -1, -1, -1, -1);
+        primary_ts->Options(enable_compression_, -1, -1, -1, -1);
+    }
 
     compression_start = std::chrono::system_clock::now();
 
