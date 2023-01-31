@@ -209,7 +209,6 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     slow_primary_map->insert(std::make_pair("Version", hdr->getVersion()));
     slow_primary_map->insert(std::make_pair("CrateID", hdr->getCrateID()));
     slow_primary_map->insert(std::make_pair("SlotNumber", hdr->getSlotNumber()));
-    slow_primary_map->insert(std::make_pair("TimingConfiguration", hdr->getTimingConfiguration()));
 
     frame_start = std::chrono::system_clock::now();
 
