@@ -74,9 +74,11 @@ root.SmurfProcessor:
         Tau: 1
         Theta: 1
     SOStream:
-        dataDropCnt: 3
-        metaDropCnt: 3
+        TransmitterDataDropCnt: 2
+        TransmitterMetaDropCnt: 2
         pysmurf_action: 3
         pysmurf_action_timestamp: 3
         stream_tag: 3
         open_g3stream: 3
+        FrameBuildTime: 2
+        CompressionTime: 2

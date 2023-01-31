@@ -63,6 +63,9 @@ public:
     void setFlacLevel(int flac_level);
     int getFlacLevel() const;
 
+    float getFrameBuildTime();
+    float getCompressionTime();
+
     size_t getDroppedFrames();
 
 protected:
@@ -103,6 +106,10 @@ private:
     bool running_;
     bool debug_;
     bool encode_timestreams_;
+
+    // Frame Write durations for monitoring
+    float compression_time_;
+    float frame_build_time_;
 
     std::thread process_stash_thread_;
 

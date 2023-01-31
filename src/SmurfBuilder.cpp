@@ -65,7 +65,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     // Time points used for debugging purposes
     std::chrono::time_point<std::chrono::system_clock>
         start_time, stop_time, alloc_start, copy_start, frame_start,
-        compression_start, gil_ensure_start, gil_ensure_stop;
+        compression_start, compression_stop, gil_ensure_start, gil_ensure_stop;
     start_time = std::chrono::system_clock::now();
 
     int nchans = (*start)->sp->getHeader()->getNumberChannels();
@@ -80,8 +80,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         }
     }
 
-    if (debug_)
-        alloc_start = std::chrono::system_clock::now();
+    alloc_start = std::chrono::system_clock::now();
 
     TimestampType timing_type = (*start)->GetTimingParadigm();
 
@@ -118,8 +117,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     
     G3VectorTime sample_times = G3VectorTime(nsamps);
 
-    if (debug_)
-        copy_start = std::chrono::system_clock::now();
+    copy_start = std::chrono::system_clock::now();
 
     // Read data in to G3 Objects
     int sample = 0;
@@ -145,14 +143,12 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         }
     }
 
-    if (debug_)
-        gil_ensure_start = std::chrono::system_clock::now();
+    gil_ensure_start = std::chrono::system_clock::now();
 
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    if (debug_)
-        gil_ensure_stop = std::chrono::system_clock::now();
+    gil_ensure_stop = std::chrono::system_clock::now();
 
     data_ts->times = sample_times;
     data_ts->SetDataFromBuffer((void*)data_buffer, 2, data_shape, NPY_INT32,
@@ -178,14 +174,17 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
         time_encode_algo_
     );
 
-    if (debug_)
-        compression_start = std::chrono::system_clock::now();
+    compression_start = std::chrono::system_clock::now();
 
     if (encode_timestreams_){
         data_ts->Encode();
         tes_ts->Encode();
         primary_ts->Encode();
     }
+
+    compression_stop = std::chrono::system_clock::now();
+    compression_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        compression_stop - compression_start).count();
 
     PyGILState_Release(gstate);
     free(data_buffer);
@@ -198,8 +197,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     slow_primary_map->insert(std::make_pair("SlotNumber", hdr->getSlotNumber()));
     slow_primary_map->insert(std::make_pair("TimingConfiguration", hdr->getTimingConfiguration()));
 
-    if (debug_)
-        frame_start = std::chrono::system_clock::now();
+    frame_start = std::chrono::system_clock::now();
 
     // Create and return G3Frame
     G3FramePtr frame = boost::make_shared<G3Frame>(G3Frame::Scan);
@@ -215,13 +213,16 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     frame->Put("slow_primary", slow_primary_map);
 
     stop_time = std::chrono::system_clock::now();
+    frame_build_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        stop_time - start_time).count();
+
     if (debug_){
         printf("Frame Out (%d channels, %d samples)\n", nchans, nsamps);
         printf("Total Time: %ld ms\n", (stop_time - start_time).count()/1000000);
         printf(" - Alloc Time: %ld ms\n", (copy_start - alloc_start).count()/1000000);
         printf(" - Copy Time: %ld ms\n", (compression_start - copy_start).count()/1000000);
         printf(" - GIL Wait Time: %ld ms\n", (gil_ensure_stop - gil_ensure_start).count()/1000000);
-        printf(" - Compression Time: %ld ms\n", (frame_start - compression_start).count()/1000000);
+        printf(" - Compression Time: %ld ms\n", (compression_stop - compression_start).count()/1000000);
         printf(" - Frame Time: %ld ms\n", (stop_time - frame_start).count()/1000000);
         printf("%lu elements in queue...\n", queue_.size());
         printf("dropped frames: %lu\n", dropped_frames_);
@@ -372,6 +373,15 @@ int SmurfBuilder::getFlacLevel() const{
 void SmurfBuilder::setFlacLevel(int flac_level){
     flac_level_ = flac_level;
 }
+
+float SmurfBuilder::getFrameBuildTime(){
+    return frame_build_time_;
+}
+
+float SmurfBuilder::getCompressionTime(){
+    return compression_time_;
+}
+
 // Assist with testing the pure C++ interface
 static
 G3SuperTimestreamPtr test_cxx_interface(int nsamps, int first, int second)
@@ -423,6 +433,8 @@ void SmurfBuilder::setup_python(){
     .def("getFlacLevel", &SmurfBuilder::getFlacLevel)
     .def("setFlacLevel", &SmurfBuilder::setFlacLevel)
     .def("getDroppedFrames", &SmurfBuilder::getDroppedFrames)
+    .def("getFrameBuildTime", &SmurfBuilder::getFrameBuildTime)
+    .def("getCompressionTime", &SmurfBuilder::getCompressionTime)
     ;
     bp::def("build_g3super", test_cxx_interface);
 
