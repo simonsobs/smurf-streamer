@@ -83,7 +83,6 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     if (debug_)
         alloc_start = std::chrono::system_clock::now();
 
-    TimestampType timing_type = (*start)->GetTimingParadigm();
 
     // Initialize detector timestreams
     int32_t* data_buffer= (int32_t*) calloc(nchans * nsamps, sizeof(int32_t));
@@ -121,6 +120,9 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
     if (debug_)
         copy_start = std::chrono::system_clock::now();
 
+
+    TimestampType timing_type = Timing_LowPrecision;
+
     // Read data in to G3 Objects
     int sample = 0;
     for (auto it = start; it != stop; it++, sample++){
@@ -142,6 +144,10 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
 
         for (int i = 0; i < nchans; i++){
             data_buffer[sample + i * nsamps] = (*it)->sp->getData(i);
+        }
+
+        if (hdr->getCounter2() != 0){
+            timing_type = Timing_HighPrecision;
         }
     }
 
