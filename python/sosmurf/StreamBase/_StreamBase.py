@@ -191,6 +191,22 @@ class StreamBase(pyrogue.Device):
             localGet=self.builder.getDroppedFrames
         ))
 
+        self.add(pyrogue.LocalVariable(
+            name="CompressionTime",
+            description="Time taken (ms) to compress the latest G3 Data",
+            mode='RO',
+            value=0.0,
+            localGet=self.builder.getCompressionTime
+        ))
+
+        self.add(pyrogue.LocalVariable(
+            name="FrameBuildTime",
+            description="Time taken (ms) to build the latest G3Frame",
+            mode='RO',
+            value=0.0,
+            localGet=self.builder.getFrameBuildTime
+        ))
+
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
 
