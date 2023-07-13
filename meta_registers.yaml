@@ -79,6 +79,6 @@ root.SmurfProcessor:
         pysmurf_action: 3
         pysmurf_action_timestamp: 3
         stream_tag: 3
-        open_g3stream: 3
+        open_g3stream: [3, 5]
         FrameBuildTime: 2
         CompressionTime: 2
