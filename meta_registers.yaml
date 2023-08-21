@@ -61,6 +61,7 @@ root.SmurfProcessor:
     Downsampler:
         Disable: 1
         Factor: 1
+        DownsamplerMode: [3, 30]
     PostDataEmulator:
         Disable: 1
         Type: 1
