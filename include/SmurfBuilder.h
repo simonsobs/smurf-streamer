@@ -13,7 +13,7 @@
 
 // Maximum total size of the write queue (channels * samples)
 // Memory usage should be capped to around a few GB
-#define MAX_BUILDER_QUEUE_SIZE 50000000
+#define MAX_BUILDER_QUEUE_SIZE 150000000
 
 // Flow control constants
 #define FC_ALIVE   0
