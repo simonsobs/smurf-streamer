@@ -39,7 +39,9 @@ def setup_server(cfg, slot):
     pre_parser.add_argument('--addr', '-a')
     pre_parser.add_argument('--comm-type', '-c')
     pre_parser.add_argument('--emulate', action='store_true')
+    pre_parser.add_argument('--lane', '-l')
     args, _ = pre_parser.parse_known_args()
+    lane = args.lane
 
     if args.emulate:
         return ' '.join(sys.argv[1:])
@@ -76,6 +78,9 @@ def setup_server(cfg, slot):
         lsplit = line.split('=')
         if lsplit[0] == 'NEW_ARGS':
             args = ''.join(lsplit[1:])
+
+    if lane is not None:
+        args += f' -l {lane}'
 
     print(f"Found args: {args}")
     return args
