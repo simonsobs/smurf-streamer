@@ -13,8 +13,15 @@ import pysmurf.core.server_scripts.Common as pysmurf_common
 import shlex
 
 
-def main():
-    with open(os.path.expandvars('$OCS_CONFIG_DIR/sys_config.yml')) as f:
+def main() -> None:
+    if 'SMURF_CONFIG_DIR' in os.environ:
+        cfg_dir = os.environ["SMURF_CONFIG_DIR"]
+    elif 'OCS_CONFIG_DIR' in os.environ:
+        cfg_dir = os.environ['OCS_CONFIG_DIR']
+    else:
+        raise ValueError("SMURF_CONFIG_DIR or OCS_CONFIG_DIR must be set in the env.")
+
+    with open(os.path.join(cfg_dir, 'sys_config.yml')) as f:
         cfg = yaml.safe_load(f)
 
     slot = int(os.environ['SLOT'])
