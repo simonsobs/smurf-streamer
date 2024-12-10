@@ -37,7 +37,7 @@ jobs:
 
           echo "${REGISTRY_PASSWORD}" | docker login -u "${REGISTRY_USER}" --password-stdin
 
-          docker-compose build
+          docker compose build
 
           docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:latest
           docker tag smurf-streamer:latest ${DOCKERHUB_ORG}/smurf-streamer:${DOCKER_TAG}
