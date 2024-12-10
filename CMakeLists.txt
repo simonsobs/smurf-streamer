@@ -102,5 +102,5 @@ set_target_properties(SmurfStreamer PROPERTIES OUTPUT_NAME "sosmurfcore")
 
 # Link to rogue core
 TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${ROGUE_LIBRARIES} ${SMURF_LIBRARIES})
-TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${SPT3G_DIR}/build/spt3g/libspt3g-core.so)
+TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${SPT3G_DIR}/build/lib/libspt3g-core.so)
 TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${SO3G_DIR}/build/so3g/libso3g.so)

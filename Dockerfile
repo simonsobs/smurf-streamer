@@ -1,9 +1,9 @@
-FROM simonsobs/so_smurf_base:v0.0.4
+# FROM simonsobs/so_smurf_base:v0.0.5
 
 WORKDIR /usr/local/src/
 
-ENV SO3G_DIR /usr/local/src/so3g
-ENV SPT3G_DIR /usr/local/src/spt3g_software
+ENV SO3G_DIR=/usr/local/src/so3g
+ENV SPT3G_DIR=/usr/local/src/spt3g_software
 
 COPY . /usr/local/src/smurf-streamer
 WORKDIR /usr/local/src/smurf-streamer/build
@@ -12,8 +12,8 @@ RUN make
 
 RUN pip3 install dumb-init
 
-ENV PYTHONPATH /usr/local/src/smurf-streamer/lib:${PYTHONPATH}
-ENV PYTHONPATH /usr/local/src/smurf-streamer/python:${PYTHONPATH}
+ENV PYTHONPATH=/usr/local/src/smurf-streamer/lib:${PYTHONPATH}
+ENV PYTHONPATH=/usr/local/src/smurf-streamer/python:${PYTHONPATH}
 
 WORKDIR /usr/local/src/smurf-streamer
 ENTRYPOINT /bin/bash
