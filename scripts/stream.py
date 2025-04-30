@@ -136,8 +136,8 @@ def main() -> None:
             pipe.Run(profile=True)
             print("Closed G3 pipeline")
     else:
-        with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-            with CmbRoot(**root_kwargs):
+        with pysmurf.core.devices.PcieCard(**pcie_kwargs) as pcie:
+            with CmbRoot(pcie=pcie, **root_kwargs):
                 print("got pysmurf root. Starting G3 Pipeline...", flush=True)
                 pipe.Run(profile=True)
                 print("Closed G3 pipeline")

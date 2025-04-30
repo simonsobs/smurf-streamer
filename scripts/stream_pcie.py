@@ -64,8 +64,8 @@ def main():
 
     from pysmurf.core.roots.CmbPcie import CmbPcie    
 
-    with pysmurf.core.devices.PcieCard(**pcie_kwargs):
-        with CmbPcie(**root_kwargs) as root:
+    with pysmurf.core.devices.PcieCard(**pcie_kwargs) as pcie:
+        with CmbPcie(pcie=pcie, **root_kwargs) as root:
             print("got pysmurf root", flush=True)
             if args.use_gui:
                 print("Starting GUI...")
