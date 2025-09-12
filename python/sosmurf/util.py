@@ -209,7 +209,6 @@ def get_kwargs(args, dev_type, **extra_kwargs):
     elif dev_type=="cmb_pcie":
          kwargs = {
             'config_file'   :  args.config_file,
-            'epics_prefix'  :  args.epics_prefix,
             'polling_en'    :  args.polling_en,
             'pv_dump_file'  :  args.pv_dump_file,
             'disable_bay0'  :  args.disable_bay0,
@@ -224,7 +223,6 @@ def get_kwargs(args, dev_type, **extra_kwargs):
         kwargs = {
             'ip_addr':      args.ip_addr,
             'config_file':  args.config_file,
-            'epics_prefix': args.epics_prefix,
             'polling_en':   args.polling_en,
             'pv_dump_file': args.pv_dump_file,
             'disable_bay0': args.disable_bay0,

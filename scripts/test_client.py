@@ -26,22 +26,19 @@ class Registers:
     agg_time = _sostream + 'AggTime'
 
 def set_reg(S: SmurfControl, reg, val):
-    print(S.epics_root, reg)
-    _reg = ':'.join([S._epics_root, reg])
-    return S._caput(_reg, val)
+    print(f"crate{S.crate_id}slot{S.slot_number}", reg)
+    return S._caput(reg, val)
 
 def get_reg(S: SmurfControl, reg):
-    _reg = ':'.join([S._epics_root, reg])
-    return S._caget(_reg, use_monitor=False)
+    return S._caget(reg, use_monitor=False)
 
 #%%
 
-epics_root="emulator"
 cfg_file = '/usr/local/src/pysmurf/cfg_files/template/template.cfg'
 os.makedirs('/data/smurf_data', exist_ok=True)
 os.makedirs('/data/smurf_data/tune', exist_ok=True)
 os.makedirs('/data/smurf_data/status', exist_ok=True)
-S = SmurfControl(epics_root=epics_root, cfg_file=cfg_file)
+S = SmurfControl(cfg_file=cfg_file, server_port=9000)
 
 #%%
 set_reg(S, Registers.debug_builder, 1)
@@ -56,8 +53,6 @@ sdl.stream_g3_on(S, emulator=True)
 S.set_postdata_emulator_type('Noise')
 
 #%%
-from epics import caget, caput
 #%%
 set_reg(S, Registers.agg_time, 10)
-    
 # %%
