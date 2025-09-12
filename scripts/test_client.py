@@ -7,11 +7,11 @@ from tqdm import tqdm, trange
 
 #%%
 class Registers:
-    _root = 'AMCc:'
-    _processor = _root + "SmurfProcessor:"
-    _sostream = _processor + "SOStream:"
-    _sofilewriter = _sostream + 'SOFileWriter:'
-    _source_root = _root + 'StreamDataSource:'
+    _root = 'AMCc.'
+    _processor = _root + "SmurfProcessor."
+    _sostream = _processor + "SOStream."
+    _sofilewriter = _sostream + 'SOFileWriter.'
+    _source_root = _root + 'StreamDataSource.'
     pysmurf_action =  _sostream + 'pysmurf_action'
     pysmurf_action_timestamp =  _sostream + "pysmurf_action_timestamp"
     stream_tag =  _sostream + "stream_tag"

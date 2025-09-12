@@ -29,7 +29,7 @@ pipe.Add(core.G3NetworkSender, hostname='*', port=4532, max_queue_size=1000)
 pipe.Add(file_writer.rotator)
 
 
-with EmulationRoot():
+with EmulationRoot(server_port=9000):
     pipe.Run()
-    
+
 print("HERE")
