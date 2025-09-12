@@ -50,14 +50,8 @@ def main() -> None:
     print(f"Stream id: {args.stream_id}")
     os.environ['SMURFPUB_ID'] = f"STREAMER:{args.stream_id}"
 
-    # Sets some reasonable defaults
-    if not args.epics_prefix:
-        if args.emulate:
-            args.epics_prefix = f"smurf_emulator_s{slot}"
-            args.server_port = 9000 + 2*slot
-        else:
-            args.epics_prefix = f"smurf_server_s{slot}"
-        print(f"Using epics root {args.epics_prefix}")
+    if args.emulate:
+        args.server_port = 9000 + 2*slot
 
     if args.config_file is None:
         args.config_file = slot_cfg.get('rogue_defaults')
@@ -98,7 +92,7 @@ def main() -> None:
     }
     root_kwargs = {
         'config_file': args.config_file, 'server_port': args.server_port,
-        'epics_prefix': args.epics_prefix, 'polling_en': args.polling_en,
+        'polling_en': args.polling_en,
         'pv_dump_file': args.pv_dump_file, 'disable_bay0': args.disable_bay0,
         'disable_bay1': args.disable_bay1, 'configure': args.configure,
         'txDevice': stream_root, 'enable_pwri2c': args.enable_em22xx,
