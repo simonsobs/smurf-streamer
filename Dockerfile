@@ -1,4 +1,4 @@
-FROM simonsobs/so_smurf_base:v0.0.6
+FROM simonsobs/so_smurf_base:v0.0.7-dev
 
 WORKDIR /usr/local/src/
 
