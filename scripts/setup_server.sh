@@ -8,4 +8,4 @@ initialize extra_args
 
 args+=" ${extra_args}"
 
-echo "NEW_ARGS=${args}"
+echo "OUTPUT={\"NEW_ARGS\": \"${args}\", \"PYTHONPATH\": \"${PYTHONPATH}\"}"

@@ -7,6 +7,8 @@ import sys
 from spt3g import core
 import yaml
 import re
+import sys
+import json
 
 class stream_dumper:
     """Simple dump module that ignores flow-control keep_alive frames"""
@@ -74,10 +76,19 @@ def setup_server(cfg, slot):
 
     print("-"*60)
 
+    # parse the script output
     for line in proc.stdout.decode().split('\n'):
+        # look for marker
         lsplit = line.split('=')
-        if lsplit[0] == 'NEW_ARGS':
-            args = ''.join(lsplit[1:])
+        if lsplit[0] == 'OUTPUT':
+            out = json.loads(lsplit[1])
+            # get the arguments
+            args = out.get("NEW_ARGS", "")
+            # get the updated pythonpath
+            if "PYTHONPATH" in out:
+                new_path = out["PYTHONPATH"]
+                print(f"updating path with {new_path}.")
+                sys.path += new_path.split(":")
 
     if lane is not None:
         args += f' -l {lane}'
