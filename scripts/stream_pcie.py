@@ -1,6 +1,5 @@
 from spt3g import core
 
-import pyrogue.gui
 import argparse
 import sosmurf
 import sys
@@ -69,13 +68,8 @@ def main():
             print("got pysmurf root", flush=True)
             if args.use_gui:
                 print("Starting GUI...")
-                app_top = pyrogue.gui.application(sys.argv)
-                gui_top = pyrogue.gui.GuiTop(incGroups=None,excGroups=None)
-                gui_top.setWindowTitle(args.windows_title)
-                gui_top.addTree(root)
-                gui_top.resize(800,1000)
-                app_top.exec_()
-
+                import pyrogue.pydm
+                pyrogue.pydm.runPyDM(serverList=root.zmqServer.address, title=args.windows_title)
             else:
                 # pyrogue.waitCntrlC()
                 print("Starting G3Pipeline", flush=True)

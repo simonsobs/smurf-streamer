@@ -1,7 +1,6 @@
 from spt3g import core
 
-import rogue
-import pyrogue.gui
+import pyrogue
 import argparse
 import sosmurf
 import sys
