@@ -73,12 +73,13 @@ find_package(Boost COMPONENTS thread)
 find_package(PythonInterp 3 REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 
-find_package (Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
+find_package (Python3 COMPONENTS Interpreter Development)
 
 #####################################
 # Setup build
 #####################################
 include_directories(/usr/local/include/)
+include_directories(${PROJECT_SOURCE_DIR}/include/)
 
 # Include files
 include_directories(${ROGUE_INCLUDE_DIRS})
@@ -88,13 +89,6 @@ include_directories(${SPT3G_DIR}/core/include/core)
 include_directories(${SPT3G_DIR}/core/include)
 include_directories(${SPT3G_DIR}/core/src)
 include_directories(${SO3G_DIR}/include)
-
-
-include_directories(/usr/local/include/)
-include_directories(${PROJECT_SOURCE_DIR}/include/)
-
-include_directories(${Python3_INCLUDE_DIRS})
-include_directories(${Python3_NumPy_INCLUDE_DIRS})
 
 # Create rogue python library
 AUX_SOURCE_DIRECTORY(src SRC_FILES)
