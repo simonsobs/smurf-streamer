@@ -50,7 +50,7 @@ def main() -> None:
     os.environ['SMURFPUB_ID'] = f"STREAMER:{args.stream_id}"
 
     if args.emulate:
-        args.server_port = 9000 + 2*slot
+        args.server_port = 9000 + 3*slot
 
     if args.config_file is None:
         args.config_file = slot_cfg.get('rogue_defaults')
