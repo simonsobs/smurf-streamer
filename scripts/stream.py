@@ -49,9 +49,6 @@ def main() -> None:
     print(f"Stream id: {args.stream_id}")
     os.environ['SMURFPUB_ID'] = f"STREAMER:{args.stream_id}"
 
-    if args.emulate:
-        args.server_port = 9000 + 3*slot
-
     if args.config_file is None:
         args.config_file = slot_cfg.get('rogue_defaults')
         print(f"Using config_file {args.config_file}")
@@ -59,6 +56,10 @@ def main() -> None:
     if args.pcie_rssi_lane is None:
         args.pcie_rssi_lane = slot - 2
         print(f"Using pcie lane {args.pcie_rssi_lane}")
+
+    # make sure that server port maps to slot
+    # if left undefined, will default to use PCIE lane number to infer slot
+    args.server_port = 9000 + slot * 3
 
     stream_root = sosmurf.StreamBase(
         "SOStream", debug_meta=False, debug_data=False, agg_time=2.0
