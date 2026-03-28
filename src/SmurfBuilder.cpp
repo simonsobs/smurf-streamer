@@ -73,7 +73,7 @@ G3FramePtr SmurfBuilder::FrameFromSamples(
 
     // Creates channel names if needed
     if (nchans > chan_names_.size()){
-        char name[10];
+        char name[13];
          for (int i = chan_names_.size(); i < nchans; i++){
             sprintf(name, "r%04d", i);
             chan_names_.push_back(name);

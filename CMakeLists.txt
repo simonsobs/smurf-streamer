@@ -36,9 +36,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wno-deprecated -O3")
 #####################################
 # Link SPT3g Libraries
 #####################################
-set(SPT3G_DIR $ENV{SPT3G_SOFTWARE_PATH})
+set(SPT3G_DIR $ENV{SPT3G_DIR})
 set(SO3G_DIR $ENV{SO3G_DIR})
 link_directories(${SPT3G_DIR}/build/spt3g)
+
+find_package(Spt3g REQUIRED)
 
 #####################################
 # Find Rogue & Support Libraries
@@ -68,8 +70,8 @@ find_package(Boost COMPONENTS thread)
 # #####################################
 # set(DO_PYTHON 0)
 #
-find_package(PythonInterp 3.6 REQUIRED)
-find_package(PythonLibs 3.6 REQUIRED)
+find_package(PythonInterp 3 REQUIRED)
+find_package(PythonLibs 3 REQUIRED)
 
 find_package (Python3 COMPONENTS Interpreter Development)
 
@@ -77,6 +79,7 @@ find_package (Python3 COMPONENTS Interpreter Development)
 # Setup build
 #####################################
 include_directories(/usr/local/include/)
+include_directories(${PROJECT_SOURCE_DIR}/include/)
 
 # Include files
 include_directories(${ROGUE_INCLUDE_DIRS})
@@ -86,10 +89,6 @@ include_directories(${SPT3G_DIR}/core/include/core)
 include_directories(${SPT3G_DIR}/core/include)
 include_directories(${SPT3G_DIR}/core/src)
 include_directories(${SO3G_DIR}/include)
-
-
-include_directories(/usr/local/include/)
-include_directories(${PROJECT_SOURCE_DIR}/include/)
 
 # Create rogue python library
 AUX_SOURCE_DIRECTORY(src SRC_FILES)
@@ -102,5 +101,5 @@ set_target_properties(SmurfStreamer PROPERTIES OUTPUT_NAME "sosmurfcore")
 
 # Link to rogue core
 TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${ROGUE_LIBRARIES} ${SMURF_LIBRARIES})
-TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${SPT3G_DIR}/build/spt3g/_libcore.so)
+TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC spt3g::core)
 TARGET_LINK_LIBRARIES(SmurfStreamer LINK_PUBLIC ${SO3G_DIR}/build/so3g/libso3g.so)

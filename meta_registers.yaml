@@ -25,11 +25,11 @@ root.FpgaTopLevel.AppTop.AppCore:
         lmsGain: 1
         lmsFreqHz: 1
         CryoChannels:                      # Cryo root
-            centerFrequencyArray: 1
-            amplitudeScaleArray: 1
-            etaMagArray: 1
-            etaPhaseArray: 1
-            feedbackEnableArray: 1
+            centerFrequency: 1
+            amplitudeScale: 1
+            etaMag: 1
+            etaPhase: 1
+            feedbackEnable: 1
     RtmCryoDet:
         RampMaxCnt: 1
         EnableRampTrigger: 1
@@ -60,7 +60,7 @@ root.SmurfProcessor:
         B: 1
     Downsampler:
         Disable: 1
-        Factor: 1
+        InternalFactor: 1
         DownsamplerMode: [3, 30]
     PostDataEmulator:
         Disable: 1
@@ -71,9 +71,6 @@ root.SmurfProcessor:
     FileWriter:
         IsOpen: [3, 5]
         DataFile: 3
-    BandPhaseFeedback[{{range(8)}}]:
-        Tau: 1
-        Theta: 1
     SOStream:
         TransmitterDataDropCnt: 2
         TransmitterMetaDropCnt: 2
