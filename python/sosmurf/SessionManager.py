@@ -48,8 +48,8 @@ class SessionManager:
         self.frame_num += 1
         if self.session_id is not None:
             frame['session_id'] = self.session_id
-        if 'time' not in frame:
-            frame['time'] = core.G3Time.Now()
+        # always tag frames at this stage for consistency
+        frame['time'] = core.G3Time.Now()
 
         return frame
 
