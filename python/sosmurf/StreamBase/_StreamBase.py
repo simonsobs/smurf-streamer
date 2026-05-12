@@ -178,7 +178,10 @@ class StreamBase(pyrogue.Device):
 
         self.add(pyrogue.LocalVariable(
             name="open_g3stream",
-            description="Opens the G3 data stream",
+            description=(
+                "Status of G3 data stream. Setting is deprecated; only for checking state."
+                "Use startG3Stream command instead."
+            ),
             mode='RW',
             value=0,
         ))
@@ -206,6 +209,22 @@ class StreamBase(pyrogue.Device):
             value=0.0,
             localGet=self.builder.getFrameBuildTime
         ))
+
+        self.add(pyrogue.LocalCommand(
+            name="startG3Stream",
+            description="Opens the G3 data stream",
+            function=self._start_g3stream,
+        ))
+
+    def _start_g3stream(self):
+        # explicitly wait for all pending variable updates to be sent
+        # this ensures that the G3 status frame will be complete
+        self.root.waitOnUpdate()
+
+        # trigger the start of streaming
+        # using updateGroup ensures that the update is sent on context exit
+        with self.root.updateGroup():
+            self.open_g3stream.set(1)
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
