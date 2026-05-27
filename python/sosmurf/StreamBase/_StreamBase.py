@@ -219,12 +219,13 @@ class StreamBase(pyrogue.Device):
     def _start_g3stream(self):
         # explicitly wait for all pending variable updates to be sent
         # this ensures that the G3 status frame will be complete
-        self.root.waitOnUpdate()
+        # we wrap it in the updateGroup context manager to defer new entries
+        # to the update queue, otherwise this can create an indeterminate loop
+        with self.root.updateGroup():
+            self.root.waitOnUpdate()
 
         # trigger the start of streaming
-        # using updateGroup ensures that the update is sent on context exit
-        with self.root.updateGroup():
-            self.open_g3stream.set(1)
+        self.open_g3stream.set(1)
 
     def getDataChannel(self):
         return self._transmitter.getDataChannel()
