@@ -264,11 +264,24 @@ void SmurfBuilder::FlushStash(){
         queue_size_ = 0;
     }
 
+    // Hold the GIL for the remainder of this method. FlushStash() runs on
+    // process_stash_thread_, a bare std::thread with no Python thread state, yet
+    // everything below builds, emits, and destroys G3Frames whose members are
+    // Boost.Python-wrapped objects (G3SuperTimestream backed by NumPy arrays).
+    // Dropping the last reference to such an object without the GIL races
+    // CPython's GC/allocator and segfaults (typically in PyObject_GC_Del during
+    // teardown). The GIL is acquired *after* the stash swap above so it never
+    // overlaps read_stash_lock_/write_stash_lock_. FrameFromSamples() nests its
+    // own PyGILState_Ensure/Release, which is safe (and now redundant) under
+    // this outer hold.
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
     if (read_stash_.empty()){
         G3FramePtr frame = boost::make_shared<G3Frame>();
         frame->Put("sostream_flowcontrol", boost::make_shared<G3Int>(FC_ALIVE));
         frame->Put("time", boost::make_shared<G3Time>(G3Time::Now()));
         FrameOut(frame);
+        PyGILState_Release(gstate);
         return;
     }
 
@@ -290,6 +303,8 @@ void SmurfBuilder::FlushStash(){
         }
     }
     read_stash_.clear();
+
+    PyGILState_Release(gstate);
 }
 
 void SmurfBuilder::ProcessNewData(){
